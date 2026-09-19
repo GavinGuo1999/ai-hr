@@ -317,7 +317,8 @@ def run_screening(application_id: int):
         )) is None:
             db.add(ResumeAssessment(
                 application_id=app.id, resume_text_version=version,
-                score=output.score, comment=output.comment, evidence=output.evidence,
+                score=output.score, dimensions=output.dimensions,
+                comment=output.comment, evidence=output.evidence,
                 model_name=config.model, ai_config_id=config.id,
             ))
         app.status = Status.REVIEW_PENDING.value

@@ -110,6 +110,9 @@ export function ApplicationDetail() {
       {data.status === 'expired' && <Button type="primary" loading={busy} onClick={() => action('/regenerate-token')}>重新生成链接</Button>}
       {data.status === 'suspended' && <Button type="primary" loading={busy} onClick={() => action('/resume-assessment')}>修复完成，重置计时并恢复</Button>}
       {data.status === 'screening_failed' && !!data.resume_text && <Button loading={busy} onClick={() => action('/screening/retry')}>重试初筛</Button>}
+      {['review_pending', 'ready', 'expired', 'screening_failed'].includes(data.status) && !data.started_at &&
+        <Popconfirm title="按当前岗位 JD 重新初筛？" description="未打开的旧链接和已预抽题目会失效，初筛完成后需重新生成链接。"
+          onConfirm={() => action('/rescreen-current-job')}><Button loading={busy}>按当前岗位重新匹配</Button></Popconfirm>}
       {(data.status === 'scoring' && data.scoring_error || data.status === 'completed') && <Button loading={busy} onClick={() => action('/rescore')}>按现有答案重新评分</Button>}
       {data.status === 'completed' && <Popconfirm title="让候选人重新答题？" description="旧答案和评分会存档，并生成新链接；新链接首次打开后重新计时 3 小时。"
         onConfirm={() => action('/retake')}><Button type="primary" loading={busy}>重新答题并生成链接</Button></Popconfirm>}
@@ -121,6 +124,10 @@ export function ApplicationDetail() {
       message={`当前为第 ${data.assessment_round} 次测评；旧答案和评分见下方历史记录。`} />}
     <Row gutter={[16, 16]}><Col xs={24} md={16}>
       <Card title="简历初筛" className="block">{screen ? <><Space align="center"><Statistic title="初筛分" value={screen.score} suffix="/ 100" /><Tag color="green">第 {screen.version} 版简历</Tag></Space>
+        {screen.dimensions && Object.keys(screen.dimensions).length > 0 && <Descriptions className="top-gap" size="small" column={2} items={[
+          ['manufacturing_domain', '制造业场景'], ['ai_solution', 'AI 与 Agent'],
+          ['mvp_delivery', 'MVP 与工程交付'], ['stakeholder_governance', '沟通与治理'],
+        ].map(([key, label]) => ({ key, label, children: `${screen.dimensions[key] ?? '—'} / 100` }))} />}
         <Typography.Paragraph className="top-gap">{screen.comment}</Typography.Paragraph>
         <List size="small" dataSource={screen.evidence} renderItem={(item: string) => <List.Item>{item}</List.Item>} />
         <Typography.Text type="secondary">初筛仅供 HR 决定是否推进。</Typography.Text></>

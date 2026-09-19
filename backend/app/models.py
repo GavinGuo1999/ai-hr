@@ -174,6 +174,7 @@ class ResumeAssessment(Base):
     application_id: Mapped[int] = mapped_column(ForeignKey("applications.id"))
     resume_text_version: Mapped[int] = mapped_column(Integer)
     score: Mapped[int] = mapped_column(Integer)
+    dimensions: Mapped[dict] = mapped_column(JSON, default=dict)
     comment: Mapped[str] = mapped_column(Text)
     evidence: Mapped[list] = mapped_column(JSON, default=list)
     model_name: Mapped[str] = mapped_column(String(100))

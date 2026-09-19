@@ -199,6 +199,28 @@ def test_expiry_reissue_and_timeout(monkeypatch):
         assert detail["results"][0]["interview_score"] == 0
 
 
+def test_job_update_rescreen_invalidates_unopened_link(monkeypatch):
+    setup_ai(monkeypatch)
+    with TestClient(app) as client:
+        headers = login(client)
+        app_id, _ = create_case(client, headers)
+        original = client.get(f"/api/applications/{app_id}").json()
+        token = client.post(f"/api/applications/{app_id}/issue-link", headers=headers).json()["url"].split("/")[-1]
+        updated = client.put(f"/api/jobs/{original['job_id']}", headers=headers, json={
+            "name": original["job_name"], "jd": "更新后的中文岗位说明：负责制造业 AI 解决方案。",
+        })
+        assert updated.status_code == 200, updated.text
+        response = client.post(f"/api/applications/{app_id}/rescreen-current-job", headers=headers)
+        assert response.status_code == 200, response.text
+        assert client.get(f"/api/candidate/{token}").status_code == 404
+        detail = client.get(f"/api/applications/{app_id}").json()
+        assert detail["status"] == "review_pending"
+        assert detail["job_jd_snapshot"].startswith("更新后的中文岗位说明")
+        assert detail["questions"] == []
+        assert detail["resume_text_version"] == 2
+        assert len(detail["screenings"]) == 2
+
+
 def test_ai_failure_candidate_suspend_hr_resume(monkeypatch):
     setup_ai(monkeypatch)
     def fail(*args, **kwargs):
@@ -409,6 +431,24 @@ def test_deepseek_json_contract_without_network(monkeypatch):
     monkeypatch.setattr(ai.httpx, "post", fake_post)
     config = AIConfig(name="test", version=1, model="deepseek-chat", base_url="https://example.invalid")
     assert ai.chat_json(config, '只输出 JSON：{"ok":true}', {"test": True}, trace_name="config_test") == {"ok": True}
+
+
+def test_screening_uses_backend_weighted_100_point_score(monkeypatch):
+    monkeypatch.setattr(ai, "chat_json", lambda *args, **kwargs: {
+        "score_scale": 100,
+        "dimension_scores": {"manufacturing_domain": 80, "ai_solution": 90,
+                             "mvp_delivery": 70, "stakeholder_governance": 60},
+        "comment": "多数核心要求有证据，制造系统深度仍需核实。",
+        "evidence": ["制造业 ERP 与 AI 项目经验"],
+    })
+    config = AIConfig(name="test", version=1, model="fixture", base_url="https://example.invalid")
+    result = ai.screen_resume(config, "制造业 AI 岗位", "制造业 ERP 和 Agent 项目")
+    assert result.score == 78
+    assert result.dimensions["ai_solution"] == 90
+    monkeypatch.setattr(ai, "chat_json", lambda *args, **kwargs: {
+        "score_scale": 10, "dimension_scores": {}, "comment": "匹配", "evidence": []})
+    with pytest.raises(ai.AIError, match="100 分制"):
+        ai.screen_resume(config, "岗位", "简历")
 
 
 @pytest.mark.parametrize("question_type,options,correct_answer", [

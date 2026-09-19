@@ -8,7 +8,7 @@ from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.orm import Session
 
 from . import ai
@@ -323,7 +323,8 @@ def application_detail(application_id: int, db: Session = Depends(get_db), _: st
                    "focus_area": t.focus_area, "source_refs": t.source_refs,
                    "first_answer_complete": t.first_answer_complete, "answer_gap": t.answer_gap}
                   for t in db.scalars(select(InterviewTurn).where(InterviewTurn.application_id == application_id).order_by(InterviewTurn.round_no))],
-        "screenings": [{"score": s.score, "comment": s.comment, "evidence": s.evidence,
+        "screenings": [{"score": s.score, "dimensions": s.dimensions,
+                        "comment": s.comment, "evidence": s.evidence,
                         "version": s.resume_text_version, "created_at": s.created_at} for s in screens],
         "results": [{"attempt_no": r.attempt_no, "overall_score": r.overall_score,
                      "exam_score": r.exam_score, "interview_score": r.interview_score,
@@ -386,6 +387,48 @@ def retry_screening(application_id: int, background: BackgroundTasks,
         raise HTTPException(409, "请先补全简历文本")
     application.status = Status.SCREENING.value
     event(db, application, "screening_retry", Status.SCREENING_FAILED.value, "hr")
+    db.commit()
+    background.add_task(run_screening, application.id)
+    return app_summary(db, application)
+
+
+@app.post("/api/applications/{application_id}/rescreen-current-job")
+def rescreen_current_job(application_id: int, background: BackgroundTasks,
+                         db: Session = Depends(get_db), _: str = Depends(require_hr)):
+    application = db.get(Application, application_id)
+    if not application:
+        raise HTTPException(404, "档案不存在")
+    allowed = {Status.REVIEW_PENDING.value, Status.READY.value,
+               Status.EXPIRED.value, Status.SCREENING_FAILED.value}
+    if application.status not in allowed or application.first_opened_at is not None:
+        raise HTTPException(409, "测评开始后不能更换岗位 JD 重新初筛")
+    job = db.get(Job, application.job_id)
+    if not job or not job.jd.strip():
+        raise HTTPException(409, "当前岗位没有可用 JD")
+    before = application.status
+    if application.active_token_issue_id:
+        issue = db.get(TokenIssue, application.active_token_issue_id)
+        if issue and issue.invalidated_at is None:
+            issue.invalidated_at = utcnow()
+            issue.invalidation_reason = "job_updated_rescreen"
+            db.flush()
+    db.execute(delete(ApplicationAnswer).where(ApplicationAnswer.application_id == application.id))
+    db.execute(delete(InterviewTurn).where(InterviewTurn.application_id == application.id))
+    db.execute(delete(ApplicationQuestion).where(ApplicationQuestion.application_id == application.id))
+    application.job_name_snapshot = job.name
+    application.job_jd_snapshot = job.jd
+    application.resume_text_version += 1
+    application.resume_text_snapshot = ""
+    application.active_token_issue_id = None
+    application.adaptive_exam = False
+    application.adaptive_categories = []
+    application.status = Status.SCREENING.value
+    application.ai_config_id = current_config(db).id
+    application.ai_failure = None
+    application.scoring_error = None
+    application.ai_task = None
+    application.ai_task_started_at = None
+    event(db, application, "job_updated_rescreen", before, "hr")
     db.commit()
     background.add_task(run_screening, application.id)
     return app_summary(db, application)

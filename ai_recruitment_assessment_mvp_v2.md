@@ -1108,7 +1108,7 @@ ai_config_version
 created_at
 ```
 
-初筛仅依据岗位相关能力和简历证据，不使用照片、年龄、性别等无关敏感信息；结果是 HR 审核材料。
+初筛仅依据岗位相关能力和简历证据，不使用照片、年龄、性别等无关敏感信息；结果是 HR 审核材料。模型按 100 分制分别返回制造业场景经验、AI 与 Agent 能力、MVP 与工程交付、沟通与治理四个维度，后端按 30%、30%、25%、15% 加权计算初筛总分，避免模型误用 10 分制。评语必须说明与分数一致的优势和缺口。
 
 ### candidate_token_issues / application_events
 
@@ -1153,6 +1153,7 @@ POST   /api/applications
 GET    /api/applications/{id}
 POST   /api/applications/{id}/cancel
 POST   /api/applications/{id}/screening/retry
+POST   /api/applications/{id}/rescreen-current-job
 PUT    /api/applications/{id}/resume-text
 POST   /api/applications/{id}/issue-link
 POST   /api/applications/{id}/regenerate-token
@@ -1162,6 +1163,8 @@ POST   /api/applications/{id}/retake
 ```
 
 `issue-link` 仅允许 `REVIEW_PENDING` 且存在成功初筛；`regenerate-token` 仅允许 `EXPIRED` 且从未首次打开；`resume-assessment` 仅允许 `SUSPENDED`。HR 编辑简历文本是发链接前的受控更新接口，修改后重新初筛。`cancel` 记录 HR 决定和原因。所有 HR 接口需要后台口令登录会话。
+
+`rescreen-current-job` 仅允许测评尚未开始时调用。它使用岗位当前 JD 更新档案快照，作废未打开的旧链接和已预抽题目，然后重新初筛；HR 审核新结果后重新生成链接。
 
 `rescore` 仅对当前答案重新评分，暂时进入 `SCORING`，不允许重新作答。`retake` 仅允许已完成的测评：归档当前答案和问答、保留已有评分及事件，清空当前作答，作废旧链接，生成新链接并转到 `READY`。新链接首次打开后才开始新的 3 小时计时。HR 详情区分当前测评和历史测评。
 

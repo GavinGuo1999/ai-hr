@@ -85,6 +85,7 @@ class AIConfigIn(BaseModel):
 
 class ScreeningOutput(BaseModel):
     score: int = Field(ge=0, le=100)
+    dimensions: dict[str, int] = Field(default_factory=dict)
     comment: str = Field(min_length=1)
     evidence: list[str] = Field(default_factory=list)
 
