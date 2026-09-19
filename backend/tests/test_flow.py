@@ -1,7 +1,9 @@
 import io
+import json
 import os
 import sys
 import tempfile
+import zipfile
 from datetime import timedelta
 from pathlib import Path
 
@@ -22,7 +24,8 @@ sys.path.insert(0, str(ROOT / "backend"))
 from app import ai  # noqa: E402
 from app.db import SessionLocal, engine, utcnow  # noqa: E402
 from app.main import app  # noqa: E402
-from app.models import AIConfig, Application, TokenIssue  # noqa: E402
+from app.models import AIConfig, Application, PracticalTask, TokenIssue  # noqa: E402
+from app.practical import build_report, generate_events, grade_package, task_config  # noqa: E402
 from app.schemas import ScoringOutput, ScreeningOutput  # noqa: E402
 from app.services import ai_context, run_scoring, sweep  # noqa: E402
 
@@ -88,6 +91,44 @@ def create_case(client, headers):
     return app_id, question
 
 
+def complete_practical(client, token: str, app_id: int, expected_score: int = 100):
+    state = client.get(f"/api/candidate/{token}").json()
+    assert state["status"] == "practical_in_progress"
+    downloaded = client.get(f"/api/candidate/{token}/practical/package")
+    assert downloaded.status_code == 200 and downloaded.content.startswith(b"PK")
+    with SessionLocal() as db:
+        task = db.query(PracticalTask).filter_by(
+            application_id=app_id, assessment_round=db.get(Application, app_id).assessment_round).one()
+        report = build_report(generate_events(task.seed), task_config())
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        archive.writestr("solution/solve.py", "# verified solution\n" + "# implementation detail\n" * 30)
+        archive.writestr("AI_WORKLOG.md", "# AI worklog\n" + "运行测试、检查失败分项并修正实现。\n" * 8)
+        archive.writestr("output/report.json", json.dumps(report))
+    submitted = client.post(f"/api/candidate/{token}/practical/submissions", files={
+        "package": ("submission.zip", buffer.getvalue(), "application/zip")})
+    assert submitted.status_code == 200, submitted.text
+    assert submitted.json()["score"] == expected_score
+    finalized = client.post(f"/api/candidate/{token}/practical/finalize")
+    assert finalized.status_code == 200, finalized.text
+
+
+def test_practical_grader_never_executes_candidate_source():
+    marker = Path(TEST_DIR.name) / "source-was-executed.txt"
+    seed = 91357
+    report = build_report(generate_events(seed), task_config())
+    source = ("from pathlib import Path\n"
+              f"Path({str(marker)!r}).write_text('unsafe')\n" + "# padding\n" * 40)
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        archive.writestr("solution/solve.py", source)
+        archive.writestr("AI_WORKLOG.md", "# 记录\n" + "使用编程代理运行样例并修复统计逻辑。\n" * 10)
+        archive.writestr("output/report.json", json.dumps(report))
+    score, _, _ = grade_package(seed, buffer.getvalue())
+    assert score == 100
+    assert not marker.exists()
+
+
 def test_full_flow_and_no_candidate_leak(monkeypatch):
     setup_ai(monkeypatch)
     with TestClient(app) as client:
@@ -120,10 +161,12 @@ def test_full_flow_and_no_candidate_leak(monkeypatch):
             answer = client.post(f"/api/candidate/{token}/interview/answer",
                                  json={"turn_id": current["id"], "answer": "实际项目回答"})
             assert answer.status_code == 200, answer.text
+        complete_practical(client, token, app_id)
         detail = client.get(f"/api/applications/{app_id}").json()
         assert detail["status"] == "completed"
-        assert detail["overall_score"] == 89
+        assert detail["overall_score"] == 92
         assert detail["results"][0]["exam_score"] == 100
+        assert detail["results"][0]["practical_score"] == 100
         assert detail["questions"][0]["objective_score"] == 10
         assert len(detail["turns"]) == 3
         assert [t["source_refs"] for t in detail["turns"]] == [
@@ -162,6 +205,7 @@ def test_full_flow_and_no_candidate_leak(monkeypatch):
             assert current["round_no"] == round_no
             assert client.post(f"/api/candidate/{new_token}/interview/answer",
                                json={"turn_id": current["id"], "answer": "新一轮回答"}).status_code == 200
+        complete_practical(client, new_token, app_id)
         second_result = client.get(f"/api/applications/{app_id}").json()
         assert second_result["status"] == "completed"
         assert [r["attempt_no"] for r in second_result["results"]] == [3]
@@ -398,6 +442,7 @@ def test_adaptive_objective_questions_lock_and_change_difficulty(monkeypatch, le
             assert current["round_no"] == round_no
             assert client.post(f"/api/candidate/{token}/interview/answer", json={
                 "turn_id": current["id"], "answer": "实际项目回答"}).status_code == 200
+        complete_practical(client, token, app_id)
         completed = client.get(f"/api/applications/{app_id}").json()
         assert completed["status"] == "completed"
         assert completed["results"][0]["exam_score"] == 60

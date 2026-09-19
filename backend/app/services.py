@@ -14,11 +14,28 @@ from . import ai
 from .db import SessionLocal, utcnow
 from .models import (
     AIConfig, Application, ApplicationAnswer, ApplicationEvent, ApplicationQuestion,
-    AssessmentArchive, AssessmentResult, InterviewTurn, Job, Question, ResumeAssessment, Status, TokenIssue,
+    AssessmentArchive, AssessmentResult, InterviewTurn, Job, PracticalTask, Question,
+    ResumeAssessment, Status, TokenIssue,
 )
+from .practical import TASK_VERSION
 
 
 ADAPTIVE_OBJECTIVE_COUNT = 5
+
+
+def ensure_practical_task(db: Session, app: Application) -> PracticalTask:
+    task = db.scalar(select(PracticalTask).where(
+        PracticalTask.application_id == app.id,
+        PracticalTask.assessment_round == app.assessment_round,
+    ))
+    if task is None:
+        task = PracticalTask(
+            application_id=app.id, assessment_round=app.assessment_round,
+            version=TASK_VERSION, seed=secrets.randbits(31),
+        )
+        db.add(task)
+        db.flush()
+    return task
 
 
 def add_adaptive_question(db: Session, app: Application, order_no: int,
@@ -158,6 +175,7 @@ def issue_link(db: Session, app: Application) -> str:
         old.invalidated_at = utcnow()
         old.invalidation_reason = "reissued"
         db.flush()
+    ensure_practical_task(db, app)
     raw = secrets.token_urlsafe(32)
     issue = TokenIssue(application_id=app.id, token_hash=token_hash(raw))
     db.add(issue)
@@ -181,6 +199,10 @@ def start_retake(db: Session, app: Application) -> str:
     turns = list(db.scalars(select(InterviewTurn).where(
         InterviewTurn.application_id == app.id).order_by(InterviewTurn.round_no)))
     answers = {answer.application_question_id: answer for answer in app.answers}
+    practical = db.scalar(select(PracticalTask).where(
+        PracticalTask.application_id == app.id,
+        PracticalTask.assessment_round == app.assessment_round,
+    ))
     db.add(AssessmentArchive(
         application_id=app.id, assessment_round=app.assessment_round,
         answers=[{"question_id": q.id, "order_no": q.order_no, "question": q.content,
@@ -191,6 +213,9 @@ def start_retake(db: Session, app: Application) -> str:
                  for q in app.questions],
         turns=[{"round_no": t.round_no, "question": t.question, "answer": t.answer,
                 "focus_area": t.focus_area, "source_refs": t.source_refs} for t in turns],
+        practical=({"score": practical.best_score, "attempt_count": practical.attempt_count,
+                    "breakdown": practical.best_breakdown, "feedback": practical.feedback}
+                   if practical else {}),
         first_opened_at=app.first_opened_at, deadline_at=app.deadline_at,
         completed_at=app.completed_at,
     ))
@@ -205,6 +230,7 @@ def start_retake(db: Session, app: Application) -> str:
     db.expire(app, ["answers", "questions"])
     prepare_exam_questions(db, app)
     app.assessment_round += 1
+    ensure_practical_task(db, app)
     app.first_opened_at = None
     app.deadline_at = None
     app.exam_submitted_at = None
@@ -271,7 +297,8 @@ def expire_or_timeout(db: Session, app: Application) -> bool:
             event(db, app, "link_expired", before)
             db.commit()
             return True
-    if app.status in {Status.EXAM_IN_PROGRESS.value, Status.INTERVIEW_IN_PROGRESS.value} and app.deadline_at and now >= app.deadline_at:
+    if app.status in {Status.EXAM_IN_PROGRESS.value, Status.INTERVIEW_IN_PROGRESS.value,
+                      Status.PRACTICAL_IN_PROGRESS.value} and app.deadline_at and now >= app.deadline_at:
         before = app.status
         if before == Status.EXAM_IN_PROGRESS.value:
             grade_objective(db, app)
@@ -442,8 +469,16 @@ def run_scoring(application_id: int):
             return
         context["resume_screening_score"] = screen.score
         context["incomplete_reason"] = app.incomplete_reason
+        practical = db.scalar(select(PracticalTask).where(
+            PracticalTask.application_id == app.id,
+            PracticalTask.assessment_round == app.assessment_round,
+        ))
+        context["practical_assessment"] = ({"score": practical.best_score,
+                                             "breakdown": practical.best_breakdown}
+                                            if practical else {"score": 0, "breakdown": {}})
         config = db.get(AIConfig, app.ai_config_id)
         resume_score = screen.score
+        practical_score = practical.best_score if practical else 0
     for attempt in range(2):
         try:
             output = ai.score_application(config, context, application_id=application_id)
@@ -479,11 +514,18 @@ def run_scoring(application_id: int):
         answered_rounds = db.scalar(select(func.count(InterviewTurn.id)).where(
             InterviewTurn.application_id == app.id, InterviewTurn.answer.is_not(None))) or 0
         interview_score = round(output.interview_score * answered_rounds / 3)
-        overall = round(exam_score * .50 + interview_score * .35 + resume_score * .15)
+        if practical:
+            overall = round(exam_score * .35 + practical_score * .30
+                            + interview_score * .25 + resume_score * .10)
+        else:
+            # Preserve the original weighting when HR rescored an assessment
+            # completed before practical tasks existed.
+            overall = round(exam_score * .50 + interview_score * .35 + resume_score * .15)
         db.add(AssessmentResult(
             application_id=app.id, attempt_no=attempt_no,
             assessment_round=app.assessment_round, overall_score=overall,
             exam_score=exam_score, interview_score=interview_score,
+            practical_score=practical_score,
             resume_score=resume_score, dimensions=output.dimensions,
             strengths=output.strengths, weaknesses=output.weaknesses, risks=output.risks,
             evidence=output.evidence, summary=output.summary,
@@ -504,6 +546,7 @@ def sweep() -> list[int]:
     with SessionLocal() as db:
         for app in db.scalars(select(Application).where(Application.status.in_([
             Status.READY.value, Status.EXAM_IN_PROGRESS.value, Status.INTERVIEW_IN_PROGRESS.value,
+            Status.PRACTICAL_IN_PROGRESS.value,
         ]))):
             expire_or_timeout(db, app)
             if app.status == Status.SCORING.value:

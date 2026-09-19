@@ -1,6 +1,6 @@
 # AI 招聘测评 MVP
 
-根据 [业务设计](ai_recruitment_assessment_mvp_v2.md) 实现的本地演示版。HR 上传简历后先获得 AI 初筛；HR 决定是否发放 24 小时内首次打开的候选人链接；首次打开后服务端计 3 小时，完成笔试、三轮问答和辅助评价。
+根据 [业务设计](ai_recruitment_assessment_mvp_v2.md) 实现的本地演示版。HR 上传简历后先获得 AI 初筛；HR 决定是否发放 24 小时内首次打开的候选人链接；首次打开后服务端计 3 小时，完成笔试、三轮问答、候选人专属 AI 编程实操和辅助评价。
 
 ## 运行环境
 
@@ -80,4 +80,5 @@ npm run build
 - `DEEPSEEK_API_KEY`、`HR_ADMIN_PASSWORD`、`HR_SESSION_SECRET` 从环境注入，不进入数据库或 Git。
 - Langfuse 默认关闭；在明确同意连接该账号后，设置 `LANGFUSE_SEND_TRACES=1` 及相应的 `LANGFUSE_PUBLIC_KEY`、`LANGFUSE_SECRET_KEY`、`LANGFUSE_BASE_URL`。仅发送应用 ID、轮次、Prompt 版本、模型、长度、耗时、token 用量与成功/失败标记，不发送简历、答案或候选人 Token。
 - 原始简历保存在本地 `uploads/`，SQLite 数据在 `backend/local.db`，两者均已被 Git 忽略；请按演示环境的需要备份和清理。
+- AI 编程实操包只依赖 Python 3.11 标准库。候选人上传源码、结果 JSON 和 AI 协作记录；后端只解析产物并执行隐藏数据验收，不运行候选人代码。实操提交包保存在本地 `uploads/practical/`。
 - 候选人路径包含 Bearer Token，因此后端用 `--no-access-log` 启动；反向代理也应屏蔽该路径的完整 URL 日志。

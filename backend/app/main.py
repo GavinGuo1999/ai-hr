@@ -16,14 +16,17 @@ from .auth import COOKIE_NAME, check_password, create_session, failed_login, log
 from .db import Base, engine, get_db, utcnow
 from .models import (
     AIConfig, Application, ApplicationAnswer, ApplicationEvent, ApplicationQuestion,
-    AssessmentArchive, AssessmentResult, InterviewTurn, Job, Question, QuestionRule, ResumeAssessment, Status, TokenIssue,
+    AssessmentArchive, AssessmentResult, InterviewTurn, Job, PracticalTask, Question, QuestionRule,
+    ResumeAssessment, Status, TokenIssue,
 )
+from .practical import MAX_PACKAGE_BYTES, build_bundle, grade_package
 from .resume import UPLOAD_DIR, save_and_extract
 from .schemas import (
     AIConfigIn, AnswerIn, InterviewAnswerIn, JobIn, ObjectiveAnswerIn, QuestionIn, ReasonIn, ResumeTextIn, RuleIn,
 )
 from .services import (
-    ADAPTIVE_OBJECTIVE_COUNT, add_adaptive_question, current_config, event, expire_or_timeout,
+    ADAPTIVE_OBJECTIVE_COUNT, add_adaptive_question, current_config, ensure_practical_task,
+    event, expire_or_timeout,
     get_by_token, grade_objective, issue_link,
     pending_ai_work, run_question, run_scoring, run_screening, safe_question, start_retake, sweep,
 )
@@ -63,6 +66,7 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="AI 招聘测评 MVP", lifespan=lifespan)
+PRACTICAL_DIR = (UPLOAD_DIR / "practical").resolve()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[os.getenv("CORS_ORIGIN", "http://localhost:5173")],
@@ -300,6 +304,10 @@ def application_detail(application_id: int, db: Session = Depends(get_db), _: st
         AssessmentResult.application_id == application_id).order_by(AssessmentResult.attempt_no.desc())))
     archives = list(db.scalars(select(AssessmentArchive).where(
         AssessmentArchive.application_id == application_id).order_by(AssessmentArchive.assessment_round.desc())))
+    practical = db.scalar(select(PracticalTask).where(
+        PracticalTask.application_id == application_id,
+        PracticalTask.assessment_round == application.assessment_round,
+    ))
     events = list(db.scalars(select(ApplicationEvent).where(
         ApplicationEvent.application_id == application_id).order_by(ApplicationEvent.id.desc())))
     screening_failure = next((e.reason for e in events if e.action == "screening_failed"), "")
@@ -323,12 +331,18 @@ def application_detail(application_id: int, db: Session = Depends(get_db), _: st
                    "focus_area": t.focus_area, "source_refs": t.source_refs,
                    "first_answer_complete": t.first_answer_complete, "answer_gap": t.answer_gap}
                   for t in db.scalars(select(InterviewTurn).where(InterviewTurn.application_id == application_id).order_by(InterviewTurn.round_no))],
+        "practical": ({"version": practical.version, "attempt_count": practical.attempt_count,
+                       "best_score": practical.best_score, "breakdown": practical.best_breakdown,
+                       "feedback": practical.feedback, "submitted_at": practical.submitted_at,
+                       "finalized_at": practical.finalized_at,
+                       "has_submission": bool(practical.best_submission_path)} if practical else None),
         "screenings": [{"score": s.score, "dimensions": s.dimensions,
                         "comment": s.comment, "evidence": s.evidence,
                         "version": s.resume_text_version, "created_at": s.created_at} for s in screens],
         "results": [{"attempt_no": r.attempt_no, "overall_score": r.overall_score,
                      "exam_score": r.exam_score, "interview_score": r.interview_score,
-                     "resume_score": r.resume_score, "dimensions": r.dimensions,
+                     "practical_score": r.practical_score, "resume_score": r.resume_score,
+                     "dimensions": r.dimensions,
                      "strengths": r.strengths, "weaknesses": r.weaknesses, "risks": r.risks,
                      "evidence": r.evidence, "summary": r.summary,
                      "incomplete_reason": r.incomplete_reason, "created_at": r.created_at}
@@ -338,8 +352,10 @@ def application_detail(application_id: int, db: Session = Depends(get_db), _: st
                            "first_opened_at": archive.first_opened_at,
                            "completed_at": archive.completed_at,
                            "answers": archive.answers, "turns": archive.turns,
+                           "practical": archive.practical,
                            "results": [{"attempt_no": r.attempt_no, "overall_score": r.overall_score,
                                         "exam_score": r.exam_score, "interview_score": r.interview_score,
+                                        "practical_score": r.practical_score,
                                         "summary": r.summary, "created_at": r.created_at}
                                        for r in results if r.assessment_round == archive.assessment_round]}
                           for archive in archives],
@@ -357,6 +373,24 @@ def download_resume(application_id: int, db: Session = Depends(get_db), _: str =
     if not path.is_relative_to(UPLOAD_DIR) or not path.is_file():
         raise HTTPException(404, "简历文件不存在")
     return FileResponse(path, filename="resume" + path.suffix)
+
+
+@app.get("/api/applications/{application_id}/practical/submission")
+def download_practical_submission(application_id: int, db: Session = Depends(get_db),
+                                  _: str = Depends(require_hr)):
+    application = db.get(Application, application_id)
+    if not application:
+        raise HTTPException(404, "档案不存在")
+    task = db.scalar(select(PracticalTask).where(
+        PracticalTask.application_id == application_id,
+        PracticalTask.assessment_round == application.assessment_round,
+    ))
+    if not task or not task.best_submission_path:
+        raise HTTPException(404, "当前测评没有实操提交包")
+    path = Path(task.best_submission_path).resolve()
+    if not path.is_relative_to(PRACTICAL_DIR) or not path.is_file():
+        raise HTTPException(404, "实操提交包不存在")
+    return FileResponse(path, filename=f"practical-{application_id}-round-{application.assessment_round}.zip")
 
 
 @app.put("/api/applications/{application_id}/resume-text")
@@ -753,12 +787,93 @@ def submit_interview_answer(token: str, data: InterviewAnswerIn, background: Bac
     turn.answer_created_at = utcnow()
     event(db, application, "interview_answered", application.status, "candidate", f"round={turn.round_no}")
     if turn.round_no == 3:
-        application.status = Status.SCORING.value
+        ensure_practical_task(db, application)
+        application.status = Status.PRACTICAL_IN_PROGRESS.value
         event(db, application, "interview_completed", Status.INTERVIEW_IN_PROGRESS.value, "candidate")
-        background.add_task(run_scoring, application.id)
     else:
         background.add_task(run_question, application.id)
     db.commit()
+    return candidate_state(db, application)
+
+
+def practical_out(task: PracticalTask) -> dict:
+    return {"title": "AI Agent 执行轨迹诊断实操", "version": task.version,
+            "attempt_count": task.attempt_count, "attempt_limit": 5,
+            "best_score": task.best_score, "breakdown": task.best_breakdown,
+            "feedback": task.feedback, "can_finalize": task.attempt_count > 0}
+
+
+@app.get("/api/candidate/{token}/practical")
+def candidate_practical(token: str, db: Session = Depends(get_db)):
+    application, _ = get_by_token(db, token)
+    expire_or_timeout(db, application)
+    if application.status != Status.PRACTICAL_IN_PROGRESS.value:
+        raise HTTPException(409, "当前不在 AI 编程实操阶段")
+    return practical_out(ensure_practical_task(db, application))
+
+
+@app.get("/api/candidate/{token}/practical/package")
+def candidate_practical_package(token: str, db: Session = Depends(get_db)):
+    application, _ = get_by_token(db, token)
+    expire_or_timeout(db, application)
+    if application.status != Status.PRACTICAL_IN_PROGRESS.value:
+        raise HTTPException(409, "当前不在 AI 编程实操阶段")
+    task = ensure_practical_task(db, application)
+    package = build_bundle(task.seed)
+    return Response(content=package, media_type="application/zip", headers={
+        "Content-Disposition": "attachment; filename=ai-agent-practical.zip",
+        "Cache-Control": "no-store",
+    })
+
+
+@app.post("/api/candidate/{token}/practical/submissions")
+async def submit_practical(token: str, package: UploadFile = File(...),
+                           db: Session = Depends(get_db)):
+    application, _ = get_by_token(db, token)
+    expire_or_timeout(db, application)
+    if application.status != Status.PRACTICAL_IN_PROGRESS.value:
+        raise HTTPException(409, "实操已结束或超时")
+    task = ensure_practical_task(db, application)
+    if task.attempt_count >= 5:
+        raise HTTPException(409, "已达到 5 次提交上限，请确认最终成绩")
+    raw = await package.read(MAX_PACKAGE_BYTES + 1)
+    try:
+        score, breakdown, feedback = grade_package(task.seed, raw)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from None
+    task.attempt_count += 1
+    task.submitted_at = utcnow()
+    if score >= task.best_score:
+        PRACTICAL_DIR.mkdir(parents=True, exist_ok=True)
+        path = (PRACTICAL_DIR / f"application-{application.id}-round-{application.assessment_round}-best.zip").resolve()
+        if not path.is_relative_to(PRACTICAL_DIR):
+            raise HTTPException(500, "提交路径无效")
+        path.write_bytes(raw)
+        task.best_score = score
+        task.best_breakdown = breakdown
+        task.feedback = feedback
+        task.best_submission_path = str(path)
+    event(db, application, "practical_submitted", application.status, "candidate",
+          f"attempt={task.attempt_count}; score={score}; best={task.best_score}")
+    db.commit()
+    return practical_out(task) | {"score": score}
+
+
+@app.post("/api/candidate/{token}/practical/finalize")
+def finalize_practical(token: str, background: BackgroundTasks, db: Session = Depends(get_db)):
+    application, _ = get_by_token(db, token)
+    expire_or_timeout(db, application)
+    if application.status != Status.PRACTICAL_IN_PROGRESS.value:
+        raise HTTPException(409, "实操已结束或超时")
+    task = ensure_practical_task(db, application)
+    if task.attempt_count == 0:
+        raise HTTPException(409, "请至少提交一次实操结果")
+    task.finalized_at = utcnow()
+    application.status = Status.SCORING.value
+    event(db, application, "practical_finalized", Status.PRACTICAL_IN_PROGRESS.value,
+          "candidate", f"score={task.best_score}")
+    db.commit()
+    background.add_task(run_scoring, application.id)
     return candidate_state(db, application)
 
 

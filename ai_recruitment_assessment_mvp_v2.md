@@ -154,6 +154,7 @@ class ApplicationStatus(str, Enum):
     READY = "ready"                         # 链接已发，尚未首次打开
     EXAM_IN_PROGRESS = "exam_in_progress"
     INTERVIEW_IN_PROGRESS = "interview_in_progress"
+    PRACTICAL_IN_PROGRESS = "practical_in_progress" # AI 编程实操
     SUSPENDED = "suspended"                 # AI 故障后候选人主动终止本次计时
     SCORING = "scoring"
     COMPLETED = "completed"
@@ -167,7 +168,9 @@ class ApplicationStatus(str, Enum):
 SCREENING → REVIEW_PENDING → READY → EXAM_IN_PROGRESS
                                         ↓ 提交笔试
                                INTERVIEW_IN_PROGRESS
-                                        ↓ 完成三轮或总时限届满
+                                        ↓ 完成三轮
+                               PRACTICAL_IN_PROGRESS
+                                        ↓ 确认实操成绩或总时限届满
                                       SCORING → COMPLETED
 ```
 
@@ -719,7 +722,7 @@ ai_config_version
 
 ## 18. 最终 AI 评分
 
-完成 Round 3 或总时限届满：
+完成 Round 3 后进入 AI 编程实操；候选人确认最高分，或总时限届满后：
 
 ```text
 status = SCORING
@@ -737,10 +740,13 @@ status = SCORING
 5. 客观题结果
 6. 三轮 AI 问题
 7. 三轮候选人回答
-8. 简历初筛结果与缺答/超时标记（初筛结果仅作背景，最终评分仍须引用原始证据）
+8. AI 编程实操隐藏验收分、分项结果和提交次数
+9. 简历初筛结果与缺答/超时标记（初筛结果仅作背景，最终评分仍须引用原始证据）
 ```
 
-评分依据优先级：**笔试答案最高，AI 问答其次，简历最次**。MVP 暂定笔试 50%、问答 35%、简历 15%。模型返回笔试和问答的分数、各维度解释与证据；简历部分直接使用 HR 审核时存档的初筛分。后端按固定权重计算总分，不直接信任模型给出的总分。客观题由代码判分；简答题和问答由模型依据明确评分要点评价。缺答记 0 分并在报告中标明原因，未完成测评不与完整测评直接排名。简历初筛分与最终总分是不同字段，后者是三个来源加权的结果。
+评分依据优先级继续保持笔试最高、简历最低，并让实操成为独立的工程能力证据。固定权重为：笔试 35%、AI 编程实操 30%、问答 25%、简历 10%。实操由后端隐藏规则直接验收；模型返回笔试简答题和问答的分数、各维度解释与证据；简历部分直接使用 HR 审核时存档的初筛分。后端按固定权重计算总分，不直接信任模型给出的总分。客观题由代码判分；简答题和问答由模型依据明确评分要点评价。缺答记 0 分并在报告中标明原因，未完成测评不与完整测评直接排名。
+
+AI 编程实操采用候选人专属数据包。题目要求处理乱序 Agent 轨迹、重复修正、重试语义、工具别名、依赖传播、成本和性能统计。数据规模使手工计算不可行；候选人需要在本地使用编程工具运行和迭代。包内仅使用 Python 3.11 标准库，并提供样例和结构检查器。候选人提交 `solution/solve.py`、`output/report.json` 与 `AI_WORKLOG.md` 的 ZIP；后端不执行源码，只按同一专属数据重算隐藏答案，分别验收提交完整性、总体汇总、工具与重试统计、失败根因及依赖传播、性能瓶颈。最多提交 5 次，只返回分项反馈，最终确认最高分。
 
 每个维度必须有 0–100 的评分锚点及证据位置（题号或问答轮次）；证据不足则说明不确定性。重新评分保留旧结果和模型/配置版本，HR 详情显示最新有效结果及历史，不覆盖原评分。
 
@@ -1404,6 +1410,9 @@ EXAM_IN_PROGRESS
 INTERVIEW_IN_PROGRESS
 → InterviewView
 
+PRACTICAL_IN_PROGRESS
+→ PracticalView（下载专属题目包、提交 ZIP、查看分项反馈并确认最高分）
+
 SUSPENDED
 → SuspendedView（提示联系 HR，等待恢复）
 
@@ -1573,13 +1582,16 @@ candidate_token_issues.token_hash UNIQUE
 18. 张三回答
 19. AI Round 3
 20. 张三回答
-21. status -> SCORING
-22. AI 返回合法评分 JSON
-23. 保存 assessment_results
-24. status -> COMPLETED
-25. HR 应聘列表显示评分
-26. HR 进入详情
-27. 完整看到 JD、简历、笔试、三轮问答、AI评分
+21. status -> PRACTICAL_IN_PROGRESS
+22. 下载候选人专属实操包，使用 AI 编程工具完成并上传 ZIP
+23. 后端隐藏验收，候选人根据分项反馈迭代并确认最高分
+24. status -> SCORING
+25. AI 返回合法评分 JSON
+26. 保存 assessment_results（含实操分）
+27. status -> COMPLETED
+28. HR 应聘列表显示评分
+29. HR 进入详情
+30. 完整看到 JD、简历、笔试、三轮问答、实操提交与 AI 评分
 ```
 
 还必须验收：24 小时未打开后过期并由 HR 换发，旧链接失效；刷新/换浏览器不能延长时限；无人再访问时服务器在截止时间自动结算；超时前后并发保存答案的边界；AI 问题生成失败后候选人挂起、联系 HR、HR 恢复并重置 3 小时且原答案不丢；评分失败后 HR 重试；重复点击不产生重复问题、结果或链接；未登录者无法读取 HR 数据。

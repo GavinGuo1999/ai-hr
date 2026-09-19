@@ -9,7 +9,7 @@ import { api, json } from './api';
 
 const statusText: Record<string, string> = {
   screening: '简历初筛中', screening_failed: '初筛失败', review_pending: '待 HR 审核', ready: '待首次打开',
-  exam_in_progress: '笔试中', interview_in_progress: 'AI 问答中', suspended: '已挂起',
+  exam_in_progress: '笔试中', interview_in_progress: 'AI 问答中', practical_in_progress: 'AI 编程实操中', suspended: '已挂起',
   scoring: '评分中', completed: '已完成', expired: '链接已过期', cancelled: '已取消',
 };
 const questionTypeText: Record<string, string> = {
@@ -147,10 +147,21 @@ export function ApplicationDetail() {
           {t.round_no === 2 && t.first_answer_complete !== null && <div className="muted">
             首答判断：{t.first_answer_complete ? '充分，切换考察点' : `需要追问：${t.answer_gap || '细节不足'}`}</div>}
           <p>候选人：{t.answer || '未答'}</p></div></List.Item>} /> : '尚未开始'}</Card>
+      <Card title="AI 编程实操" className="block">{data.practical &&
+        (data.practical.attempt_count > 0 || ['practical_in_progress', 'scoring', 'completed'].includes(data.status)) ? <>
+        <Space wrap><Statistic title="最高分" value={data.practical.best_score} suffix="/ 100" />
+          <Tag color="blue">已提交 {data.practical.attempt_count} / 5 次</Tag>
+          {data.practical.finalized_at && <Tag color="green">已确认</Tag>}</Space>
+        {!!Object.keys(data.practical.breakdown || {}).length && <Descriptions className="top-gap" size="small" column={2}
+          items={Object.entries(data.practical.breakdown).map(([key, value]) => ({ key, label: key, children: String(value) }))} />}
+        {!!data.practical.feedback?.length && <Alert className="top-gap" type="warning" message="未通过分项" description={data.practical.feedback.join('；')} />}
+        {data.practical.has_submission && <a className="top-gap" style={{ display: 'inline-block' }}
+          href={'/api/applications/' + id + '/practical/submission'}>下载最高分提交包</a>}
+      </> : <Typography.Text type="secondary">完成三轮问答后生成候选人专属题目包。</Typography.Text>}</Card>
       <Card title="AI 辅助评价" className="block">{data.scoring_error && <Alert type="error" message={data.scoring_error} className="block" />}
-        {result ? <><Row gutter={16}><Col span={6}><Statistic title="综合分" value={result.overall_score} /></Col>
-          <Col span={6}><Statistic title="笔试" value={result.exam_score} /></Col><Col span={6}><Statistic title="问答" value={result.interview_score} /></Col>
-          <Col span={6}><Statistic title="简历" value={result.resume_score} /></Col></Row>
+        {result ? <><Row gutter={16}><Col flex="1"><Statistic title="综合分" value={result.overall_score} /></Col>
+          <Col flex="1"><Statistic title="笔试" value={result.exam_score} /></Col><Col flex="1"><Statistic title="实操" value={result.practical_score} /></Col>
+          <Col flex="1"><Statistic title="问答" value={result.interview_score} /></Col><Col flex="1"><Statistic title="简历" value={result.resume_score} /></Col></Row>
           {result.incomplete_reason && <Alert type="warning" message={result.incomplete_reason} className="top-gap" />}
           <Divider />{result.summary}<Descriptions className="top-gap" column={2} size="small" items={Object.entries(result.dimensions).map(([key, value]) => ({ key, label: key, children: String(value) }))} />
           <Typography.Title level={5}>优势</Typography.Title><List size="small" dataSource={result.strengths} renderItem={(v: string) => <List.Item>{v}</List.Item>} />
@@ -160,7 +171,8 @@ export function ApplicationDetail() {
         </> : <Typography.Text type="secondary">候选人提交后显示。</Typography.Text>}</Card>
       {!!data.past_attempts?.length && <Card title="历史测评" className="block"><List dataSource={data.past_attempts} renderItem={(attempt: any) =>
         <List.Item><div><b>第 {attempt.assessment_round} 次测评</b> · 完成于 {fmt(attempt.completed_at)}
-          {attempt.results[0] && <p>综合分 {attempt.results[0].overall_score} · 笔试 {attempt.results[0].exam_score} · 问答 {attempt.results[0].interview_score}</p>}
+          {attempt.results[0] && <p>综合分 {attempt.results[0].overall_score} · 笔试 {attempt.results[0].exam_score} · 实操 {attempt.results[0].practical_score} · 问答 {attempt.results[0].interview_score}</p>}
+          {attempt.practical && Object.keys(attempt.practical).length > 0 && <p>实操提交 {attempt.practical.attempt_count} 次，最高 {attempt.practical.score} 分</p>}
           <Typography.Text type="secondary">{attempt.results[0]?.summary || '无评分结果'}</Typography.Text>
           <details><summary>查看旧答案与问答</summary>
             <List size="small" dataSource={attempt.answers} renderItem={(a: any) =>

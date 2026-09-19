@@ -16,6 +16,7 @@ class Status(str, Enum):
     READY = "ready"
     EXAM_IN_PROGRESS = "exam_in_progress"
     INTERVIEW_IN_PROGRESS = "interview_in_progress"
+    PRACTICAL_IN_PROGRESS = "practical_in_progress"
     SUSPENDED = "suspended"
     SCORING = "scoring"
     COMPLETED = "completed"
@@ -192,6 +193,7 @@ class AssessmentResult(Base):
     overall_score: Mapped[int] = mapped_column(Integer)
     exam_score: Mapped[int] = mapped_column(Integer)
     interview_score: Mapped[int] = mapped_column(Integer)
+    practical_score: Mapped[int] = mapped_column(Integer, default=0)
     resume_score: Mapped[int] = mapped_column(Integer)
     dimensions: Mapped[dict] = mapped_column(JSON)
     strengths: Mapped[list] = mapped_column(JSON)
@@ -213,10 +215,29 @@ class AssessmentArchive(Base):
     assessment_round: Mapped[int] = mapped_column(Integer)
     answers: Mapped[list] = mapped_column(JSON)
     turns: Mapped[list] = mapped_column(JSON)
+    practical: Mapped[dict] = mapped_column(JSON, default=dict)
     first_opened_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     deadline_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     archived_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class PracticalTask(Base):
+    __tablename__ = "practical_tasks"
+    __table_args__ = (UniqueConstraint("application_id", "assessment_round"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    application_id: Mapped[int] = mapped_column(ForeignKey("applications.id"))
+    assessment_round: Mapped[int] = mapped_column(Integer)
+    version: Mapped[str] = mapped_column(String(80))
+    seed: Mapped[int] = mapped_column(Integer)
+    attempt_count: Mapped[int] = mapped_column(Integer, default=0)
+    best_score: Mapped[int] = mapped_column(Integer, default=0)
+    best_breakdown: Mapped[dict] = mapped_column(JSON, default=dict)
+    feedback: Mapped[list] = mapped_column(JSON, default=list)
+    best_submission_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    submitted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    finalized_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
 
 class TokenIssue(Base):
