@@ -9,7 +9,7 @@ import { api, json } from './api';
 
 const statusText: Record<string, string> = {
   screening: '简历初筛中', screening_failed: '初筛失败', review_pending: '待 HR 审核', ready: '待首次打开',
-  exam_in_progress: '笔试中', interview_in_progress: 'AI 问答中', practical_in_progress: 'AI 编程实操中', suspended: '已挂起',
+  exam_in_progress: '笔试中', interview_in_progress: 'AI 问答中', practical_in_progress: '联网 Agent 实操中', suspended: '已挂起',
   scoring: '评分中', completed: '已完成', expired: '链接已过期', cancelled: '已取消',
 };
 const questionTypeText: Record<string, string> = {
@@ -147,7 +147,7 @@ export function ApplicationDetail() {
           {t.round_no === 2 && t.first_answer_complete !== null && <div className="muted">
             首答判断：{t.first_answer_complete ? '充分，切换考察点' : `需要追问：${t.answer_gap || '细节不足'}`}</div>}
           <p>候选人：{t.answer || '未答'}</p></div></List.Item>} /> : '尚未开始'}</Card>
-      <Card title="AI 编程实操" className="block">{data.practical &&
+      <Card title="联网 AI Agent 实操" className="block">{data.practical &&
         (data.practical.attempt_count > 0 || ['practical_in_progress', 'scoring', 'completed'].includes(data.status)) ? <>
         <Space wrap><Statistic title="最高分" value={data.practical.best_score} suffix="/ 100" />
           <Tag color="blue">已提交 {data.practical.attempt_count} / 5 次</Tag>
@@ -156,8 +156,8 @@ export function ApplicationDetail() {
           items={Object.entries(data.practical.breakdown).map(([key, value]) => ({ key, label: key, children: String(value) }))} />}
         {!!data.practical.feedback?.length && <Alert className="top-gap" type="warning" message="未通过分项" description={data.practical.feedback.join('；')} />}
         {data.practical.has_submission && <a className="top-gap" style={{ display: 'inline-block' }}
-          href={'/api/applications/' + id + '/practical/submission'}>下载最高分提交包</a>}
-      </> : <Typography.Text type="secondary">完成三轮问答后生成候选人专属题目包。</Typography.Text>}</Card>
+          href={'/api/applications/' + id + '/practical/submission'}>下载最高分 JSON</a>}
+      </> : <Typography.Text type="secondary">完成三轮问答后生成候选人专属联网调研任务。</Typography.Text>}</Card>
       <Card title="AI 辅助评价" className="block">{data.scoring_error && <Alert type="error" message={data.scoring_error} className="block" />}
         {result ? <><Row gutter={16}><Col flex="1"><Statistic title="综合分" value={result.overall_score} /></Col>
           <Col flex="1"><Statistic title="笔试" value={result.exam_score} /></Col><Col flex="1"><Statistic title="实操" value={result.practical_score} /></Col>

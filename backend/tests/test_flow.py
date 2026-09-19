@@ -3,7 +3,6 @@ import json
 import os
 import sys
 import tempfile
-import zipfile
 from datetime import timedelta
 from pathlib import Path
 
@@ -25,7 +24,9 @@ from app import ai  # noqa: E402
 from app.db import SessionLocal, engine, utcnow  # noqa: E402
 from app.main import app  # noqa: E402
 from app.models import AIConfig, Application, PracticalTask, TokenIssue  # noqa: E402
-from app.practical import build_report, generate_events, grade_package, task_config  # noqa: E402
+from app.practical import (  # noqa: E402
+    INCIDENTS, REQUIRED_CONTROLS, TASK_VERSION, _selected_facts, grade_answer,
+)
 from app.schemas import ScoringOutput, ScreeningOutput  # noqa: E402
 from app.services import ai_context, run_scoring, sweep  # noqa: E402
 
@@ -91,42 +92,72 @@ def create_case(client, headers):
     return app_id, question
 
 
+def perfect_practical_answer(seed: int) -> dict:
+    incident = INCIDENTS[seed % len(INCIDENTS)]
+    return {
+        "schema_version": TASK_VERSION,
+        "research": [{"fact_id": fact["fact_id"], "answer": fact["answer"],
+                      "source_url": fact["source_url"], "source_section": fact["source_section"],
+                      "evidence": "已联网访问指定官方章节并交叉核对字段、规范强度和限制条件。"}
+                     for fact in _selected_facts(seed)],
+        "incident": {"root_cause_code": incident["code"], "evidence_ids": incident["evidence_ids"],
+                     "reasoning": "这些直接证据构成了从触发条件、执行路径到实际异常结果的完整因果链。"
+                                  "其余观察项与模型性能、数据库健康或普通网络状态相关，无法解释核心异常。"
+                                  "因此应选择该根因，并优先修复工具边界、重试语义、输入信任和验证控制，"
+                                  "随后通过故障注入与端到端验收确认问题不再复现。"},
+        "workflow": {
+            "steps": [
+                {"id": "fetch-a", "tool": "web_fetch", "depends_on": [], "purpose": "取证 A", "output_check": "HTTP 200"},
+                {"id": "fetch-b", "tool": "web_fetch", "depends_on": [], "purpose": "取证 B", "output_check": "HTTP 200"},
+                {"id": "extract", "tool": "extract", "depends_on": ["fetch-a", "fetch-b"], "purpose": "结构化提取", "output_check": "字段齐全"},
+                {"id": "check", "tool": "cross_check", "depends_on": ["fetch-a", "fetch-b", "extract"], "purpose": "交叉核验", "output_check": "无冲突"},
+                {"id": "reason", "tool": "reason", "depends_on": ["check"], "purpose": "根因推理", "output_check": "证据闭环"},
+                {"id": "validate", "tool": "schema_validate", "depends_on": ["reason"], "purpose": "校验 JSON", "output_check": "schema 通过"},
+                {"id": "approve", "tool": "human_approve", "depends_on": ["validate"], "purpose": "人工确认", "output_check": "已批准"},
+                {"id": "submit", "tool": "submit", "depends_on": ["validate", "approve"], "purpose": "提交", "output_check": "收到确认"},
+            ],
+            "retry_policy": {"retry_statuses": [429, 503], "max_attempts": 3,
+                             "respect_retry_after": True, "non_idempotent_requires_key": True},
+            "security_controls": sorted(REQUIRED_CONTROLS),
+            "acceptance_tests": [
+                {"name": "联网来源", "pass_condition": "全部官方 URL 可访问"},
+                {"name": "注入防护", "pass_condition": "外部指令不能触发写工具"},
+                {"name": "提交契约", "pass_condition": "输出通过 JSON Schema"},
+            ],
+        },
+    }
+
+
 def complete_practical(client, token: str, app_id: int, expected_score: int = 100):
     state = client.get(f"/api/candidate/{token}").json()
     assert state["status"] == "practical_in_progress"
-    downloaded = client.get(f"/api/candidate/{token}/practical/package")
-    assert downloaded.status_code == 200 and downloaded.content.startswith(b"PK")
+    task_response = client.get(f"/api/candidate/{token}/practical")
+    assert task_response.status_code == 200 and len(task_response.json()["task"]["research_questions"]) == 6
     with SessionLocal() as db:
         task = db.query(PracticalTask).filter_by(
             application_id=app_id, assessment_round=db.get(Application, app_id).assessment_round).one()
-        report = build_report(generate_events(task.seed), task_config())
-    buffer = io.BytesIO()
-    with zipfile.ZipFile(buffer, "w") as archive:
-        archive.writestr("solution/solve.py", "# verified solution\n" + "# implementation detail\n" * 30)
-        archive.writestr("AI_WORKLOG.md", "# AI worklog\n" + "运行测试、检查失败分项并修正实现。\n" * 8)
-        archive.writestr("output/report.json", json.dumps(report))
+        result = perfect_practical_answer(task.seed)
     submitted = client.post(f"/api/candidate/{token}/practical/submissions", files={
-        "package": ("submission.zip", buffer.getvalue(), "application/zip")})
+        "answer": ("answer.json", json.dumps(result, ensure_ascii=False).encode(), "application/json")})
     assert submitted.status_code == 200, submitted.text
     assert submitted.json()["score"] == expected_score
     finalized = client.post(f"/api/candidate/{token}/practical/finalize")
     assert finalized.status_code == 200, finalized.text
 
 
-def test_practical_grader_never_executes_candidate_source():
-    marker = Path(TEST_DIR.name) / "source-was-executed.txt"
+def test_practical_grader_requires_structured_json():
     seed = 91357
-    report = build_report(generate_events(seed), task_config())
-    source = ("from pathlib import Path\n"
-              f"Path({str(marker)!r}).write_text('unsafe')\n" + "# padding\n" * 40)
-    buffer = io.BytesIO()
-    with zipfile.ZipFile(buffer, "w") as archive:
-        archive.writestr("solution/solve.py", source)
-        archive.writestr("AI_WORKLOG.md", "# 记录\n" + "使用编程代理运行样例并修复统计逻辑。\n" * 10)
-        archive.writestr("output/report.json", json.dumps(report))
-    score, _, _ = grade_package(seed, buffer.getvalue())
+    with pytest.raises(ValueError, match="UTF-8 JSON"):
+        grade_answer(seed, b"not-json")
+    malformed_score, _, _ = grade_answer(seed, json.dumps({
+        "schema_version": TASK_VERSION, "research": 7, "incident": {"evidence_ids": None},
+        "workflow": {"steps": [{"id": [], "tool": "submit", "depends_on": None}]},
+    }).encode())
+    assert malformed_score < 20
+    score, breakdown, feedback = grade_answer(
+        seed, json.dumps(perfect_practical_answer(seed), ensure_ascii=False).encode())
     assert score == 100
-    assert not marker.exists()
+    assert all(value > 0 for value in breakdown.values()) and feedback == []
 
 
 def test_full_flow_and_no_candidate_leak(monkeypatch):

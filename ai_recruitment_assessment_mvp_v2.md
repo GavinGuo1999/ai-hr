@@ -154,7 +154,7 @@ class ApplicationStatus(str, Enum):
     READY = "ready"                         # 链接已发，尚未首次打开
     EXAM_IN_PROGRESS = "exam_in_progress"
     INTERVIEW_IN_PROGRESS = "interview_in_progress"
-    PRACTICAL_IN_PROGRESS = "practical_in_progress" # AI 编程实操
+    PRACTICAL_IN_PROGRESS = "practical_in_progress" # 联网 Agent 实操
     SUSPENDED = "suspended"                 # AI 故障后候选人主动终止本次计时
     SCORING = "scoring"
     COMPLETED = "completed"
@@ -722,7 +722,7 @@ ai_config_version
 
 ## 18. 最终 AI 评分
 
-完成 Round 3 后进入 AI 编程实操；候选人确认最高分，或总时限届满后：
+完成 Round 3 后进入联网 Agent 实操；候选人确认最高分，或总时限届满后：
 
 ```text
 status = SCORING
@@ -740,13 +740,13 @@ status = SCORING
 5. 客观题结果
 6. 三轮 AI 问题
 7. 三轮候选人回答
-8. AI 编程实操隐藏验收分、分项结果和提交次数
+8. 联网 Agent 实操隐藏验收分、分项结果和提交次数
 9. 简历初筛结果与缺答/超时标记（初筛结果仅作背景，最终评分仍须引用原始证据）
 ```
 
-评分依据优先级继续保持笔试最高、简历最低，并让实操成为独立的工程能力证据。固定权重为：笔试 35%、AI 编程实操 30%、问答 25%、简历 10%。实操由后端隐藏规则直接验收；模型返回笔试简答题和问答的分数、各维度解释与证据；简历部分直接使用 HR 审核时存档的初筛分。后端按固定权重计算总分，不直接信任模型给出的总分。客观题由代码判分；简答题和问答由模型依据明确评分要点评价。缺答记 0 分并在报告中标明原因，未完成测评不与完整测评直接排名。
+评分依据优先级继续保持笔试最高、简历最低，并让实操成为独立的工程能力证据。固定权重为：笔试 35%、联网 Agent 实操 30%、问答 25%、简历 10%。实操由后端隐藏规则直接验收；模型返回笔试简答题和问答的分数、各维度解释与证据；简历部分直接使用 HR 审核时存档的初筛分。后端按固定权重计算总分，不直接信任模型给出的总分。客观题由代码判分；简答题和问答由模型依据明确评分要点评价。缺答记 0 分并在报告中标明原因，未完成测评不与完整测评直接排名。
 
-AI 编程实操采用候选人专属数据包。题目要求处理乱序 Agent 轨迹、重复修正、重试语义、工具别名、依赖传播、成本和性能统计。数据规模使手工计算不可行；候选人需要在本地使用编程工具运行和迭代。包内仅使用 Python 3.11 标准库，并提供样例和结构检查器。候选人提交 `solution/solve.py`、`output/report.json` 与 `AI_WORKLOG.md` 的 ZIP；后端不执行源码，只按同一专属数据重算隐藏答案，分别验收提交完整性、总体汇总、工具与重试统计、失败根因及依赖传播、性能瓶颈。最多提交 5 次，只返回分项反馈，最终确认最高分。
+联网 AI Agent 实操不要求候选人安装环境。系统从事实题库和事故场景中生成候选人专属任务，要求 Agent 访问 RFC Editor、W3C、JSON Schema、OpenAPI、OWASP 等官方来源，给出精确字段、章节与证据摘要；再根据事故观察完成根因推理，并设计包含并行取证、交叉核验、重试、幂等、安全边界、人工审批、Schema 校验和验收测试的 Agent DAG。候选人最终只上传一个 UTF-8 JSON 文件。后端分别验收 JSON 契约、联网检索与引用、事故推理、Agent 工程设计。最多提交 5 次，只返回分项反馈，最终确认最高分。
 
 每个维度必须有 0–100 的评分锚点及证据位置（题号或问答轮次）；证据不足则说明不确定性。重新评分保留旧结果和模型/配置版本，HR 详情显示最新有效结果及历史，不覆盖原评分。
 
@@ -1411,7 +1411,7 @@ INTERVIEW_IN_PROGRESS
 → InterviewView
 
 PRACTICAL_IN_PROGRESS
-→ PracticalView（下载专属题目包、提交 ZIP、查看分项反馈并确认最高分）
+→ PracticalView（复制专属任务给联网 Agent、上传结构化 JSON、查看分项反馈并确认最高分）
 
 SUSPENDED
 → SuspendedView（提示联系 HR，等待恢复）
@@ -1583,7 +1583,7 @@ candidate_token_issues.token_hash UNIQUE
 19. AI Round 3
 20. 张三回答
 21. status -> PRACTICAL_IN_PROGRESS
-22. 下载候选人专属实操包，使用 AI 编程工具完成并上传 ZIP
+22. 复制候选人专属任务给联网 AI Agent，完成官方来源检索、推理和工程方案，上传结构化 JSON
 23. 后端隐藏验收，候选人根据分项反馈迭代并确认最高分
 24. status -> SCORING
 25. AI 返回合法评分 JSON

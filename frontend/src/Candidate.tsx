@@ -21,7 +21,7 @@ export default function Candidate() {
   const [fatal, setFatal] = useState('');
   const [objectiveFeedback, setObjectiveFeedback] = useState<{ correct: boolean; orderNo: number; nextDifficulty: number | null }>();
   const [practical, setPractical] = useState<any>();
-  const [packageFile, setPackageFile] = useState<UploadFile[]>([]);
+  const [answerFile, setAnswerFile] = useState<UploadFile[]>([]);
 
   const sync = (data: any) => {
     setState(data);
@@ -106,12 +106,12 @@ export default function Candidate() {
     finally { setBusy(false); }
   };
   const submitPractical = async () => {
-    if (!packageFile[0]?.originFileObj) { message.error('请选择 ZIP 提交包'); return; }
-    const form = new FormData(); form.append('package', packageFile[0].originFileObj);
+    if (!answerFile[0]?.originFileObj) { message.error('请选择 JSON 答案文件'); return; }
+    const form = new FormData(); form.append('answer', answerFile[0].originFileObj);
     setBusy(true);
     try {
       const result = await api<any>(base + '/practical/submissions', { method: 'POST', body: form });
-      setPractical(result); setPackageFile([]); message.success(`本次 ${result.score} 分，已保留最高分 ${result.best_score}`);
+      setPractical(result); setAnswerFile([]); message.success(`本次 ${result.score} 分，已保留最高分 ${result.best_score}`);
     } catch (e) { message.error((e as Error).message); }
     finally { setBusy(false); }
   };
@@ -138,7 +138,7 @@ export default function Candidate() {
       <div className="candidate-title"><Typography.Text type="secondary">{state.job_name}</Typography.Text><Typography.Title level={2}>{state.candidate_name}，你好</Typography.Title></div>
       {['exam_in_progress', 'interview_in_progress', 'practical_in_progress'].includes(state.status) && <Steps className="block"
         current={state.status === 'exam_in_progress' ? 0 : state.status === 'interview_in_progress' ? 1 : 2}
-        items={[{ title: '计时笔试' }, { title: 'AI 三轮问答' }, { title: 'AI 编程实操' }, { title: '完成' }]} />}
+        items={[{ title: '计时笔试' }, { title: 'AI 三轮问答' }, { title: '联网 Agent 实操' }, { title: '完成' }]} />}
       {objectiveFeedback && <Card className="block">{bulbs}<Alert type={objectiveFeedback.correct ? 'success' : 'error'} showIcon
         message={objectiveFeedback.correct ? '回答正确' : '回答错误'}
         description={objectiveFeedback.nextDifficulty ? `下一题实际难度：${objectiveFeedback.nextDifficulty}` : '五道客观题已完成。'} />
@@ -176,11 +176,11 @@ export default function Candidate() {
             : <div className="center"><Spin /><p>正在生成下一轮问题，请稍候…</p></div>}
         {state.ai_failure && <Button danger className="top-gap" loading={busy} onClick={suspend}>终止计时并联系 HR</Button>}
       </Card>}
-      {state.status === 'practical_in_progress' && <Card className="block" title="AI Agent 执行轨迹诊断实操">
-        <Alert type="info" showIcon message="请在本地使用 AI 编程工具完成"
-          description="数据包因人而异，包含乱序、重试、重复修正和依赖图。只需 Python 3.11 标准库；服务端不会执行你的代码。" />
+      {state.status === 'practical_in_progress' && <Card className="block" title="联网 AI Agent 调研与工程处置">
+        <Alert type="info" showIcon message="不需要安装环境"
+          description="把下面的完整任务复制给具备联网能力的 AI Agent。它需要访问官方资料、交叉核验、分析事故并设计工程工作流；最终只生成一个 JSON 文件。" />
         <div className="top-gap"><Space wrap>
-          <a href={'/api' + base + '/practical/package'} download><Button type="primary">下载专属题目包</Button></a>
+          <Typography.Text copyable={{ text: JSON.stringify(practical?.task || {}, null, 2) }}>复制完整任务 JSON</Typography.Text>
           <Tag>最多提交 {practical?.attempt_limit || 5} 次</Tag>
           <Tag color="blue">已提交 {practical?.attempt_count || 0} 次</Tag>
           <Tag color="green">最高 {practical?.best_score || 0} 分</Tag>
@@ -190,13 +190,15 @@ export default function Candidate() {
         </div>}
         {!!practical?.feedback?.length && <Alert className="top-gap" type="warning" showIcon message="未通过分项"
           description={practical.feedback.join('；')} />}
+        <details className="top-gap"><summary>查看完整任务</summary>
+          <div className="pre">{JSON.stringify(practical?.task || {}, null, 2)}</div></details>
         <Typography.Paragraph className="top-gap" type="secondary">
-          解压后阅读 README，完成 solution/solve.py、output/report.json 和 AI_WORKLOG.md，再把整个目录压缩为 ZIP 上传。
+          要求 AI 严格按 output_shape 输出 UTF-8 JSON。不要上传说明文档、代码或压缩包。
         </Typography.Paragraph>
-        <Upload beforeUpload={() => false} maxCount={1} accept=".zip" fileList={packageFile}
-          onChange={({ fileList }) => setPackageFile(fileList)}><Button>选择 ZIP 提交包</Button></Upload>
+        <Upload beforeUpload={() => false} maxCount={1} accept=".json,application/json" fileList={answerFile}
+          onChange={({ fileList }) => setAnswerFile(fileList)}><Button>选择 JSON 答案</Button></Upload>
         <div className="exam-actions"><span className="muted">可根据分项反馈迭代；确认后不能再提交。</span><Space>
-          <Button type="primary" disabled={!packageFile[0]} loading={busy} onClick={submitPractical}>上传并验收</Button>
+          <Button type="primary" disabled={!answerFile[0]} loading={busy} onClick={submitPractical}>上传并验收</Button>
           <Button disabled={!practical?.can_finalize} loading={busy} onClick={finalizePractical}>确认最高分并结束</Button>
         </Space></div>
       </Card>}

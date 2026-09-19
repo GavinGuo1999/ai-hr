@@ -35,6 +35,15 @@ def ensure_practical_task(db: Session, app: Application) -> PracticalTask:
         )
         db.add(task)
         db.flush()
+    elif task.version != TASK_VERSION and task.finalized_at is None:
+        task.version = TASK_VERSION
+        task.seed = secrets.randbits(31)
+        task.attempt_count = 0
+        task.best_score = 0
+        task.best_breakdown = {}
+        task.feedback = []
+        task.best_submission_path = None
+        task.submitted_at = None
     return task
 
 

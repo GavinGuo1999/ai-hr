@@ -19,7 +19,7 @@ from .models import (
     AssessmentArchive, AssessmentResult, InterviewTurn, Job, PracticalTask, Question, QuestionRule,
     ResumeAssessment, Status, TokenIssue,
 )
-from .practical import MAX_PACKAGE_BYTES, build_bundle, grade_package
+from .practical import MAX_ANSWER_BYTES, build_task, grade_answer
 from .resume import UPLOAD_DIR, save_and_extract
 from .schemas import (
     AIConfigIn, AnswerIn, InterviewAnswerIn, JobIn, ObjectiveAnswerIn, QuestionIn, ReasonIn, ResumeTextIn, RuleIn,
@@ -386,11 +386,12 @@ def download_practical_submission(application_id: int, db: Session = Depends(get
         PracticalTask.assessment_round == application.assessment_round,
     ))
     if not task or not task.best_submission_path:
-        raise HTTPException(404, "当前测评没有实操提交包")
+        raise HTTPException(404, "当前测评没有实操答案")
     path = Path(task.best_submission_path).resolve()
     if not path.is_relative_to(PRACTICAL_DIR) or not path.is_file():
-        raise HTTPException(404, "实操提交包不存在")
-    return FileResponse(path, filename=f"practical-{application_id}-round-{application.assessment_round}.zip")
+        raise HTTPException(404, "实操答案不存在")
+    return FileResponse(path, filename=f"practical-{application_id}-round-{application.assessment_round}.json",
+                        media_type="application/json")
 
 
 @app.put("/api/applications/{application_id}/resume-text")
@@ -797,7 +798,7 @@ def submit_interview_answer(token: str, data: InterviewAnswerIn, background: Bac
 
 
 def practical_out(task: PracticalTask) -> dict:
-    return {"title": "AI Agent 执行轨迹诊断实操", "version": task.version,
+    return {"title": "联网 AI Agent 调研与工程处置", "version": task.version,
             "attempt_count": task.attempt_count, "attempt_limit": 5,
             "best_score": task.best_score, "breakdown": task.best_breakdown,
             "feedback": task.feedback, "can_finalize": task.attempt_count > 0}
@@ -808,26 +809,13 @@ def candidate_practical(token: str, db: Session = Depends(get_db)):
     application, _ = get_by_token(db, token)
     expire_or_timeout(db, application)
     if application.status != Status.PRACTICAL_IN_PROGRESS.value:
-        raise HTTPException(409, "当前不在 AI 编程实操阶段")
-    return practical_out(ensure_practical_task(db, application))
-
-
-@app.get("/api/candidate/{token}/practical/package")
-def candidate_practical_package(token: str, db: Session = Depends(get_db)):
-    application, _ = get_by_token(db, token)
-    expire_or_timeout(db, application)
-    if application.status != Status.PRACTICAL_IN_PROGRESS.value:
-        raise HTTPException(409, "当前不在 AI 编程实操阶段")
+        raise HTTPException(409, "当前不在联网 Agent 实操阶段")
     task = ensure_practical_task(db, application)
-    package = build_bundle(task.seed)
-    return Response(content=package, media_type="application/zip", headers={
-        "Content-Disposition": "attachment; filename=ai-agent-practical.zip",
-        "Cache-Control": "no-store",
-    })
+    return practical_out(task) | {"task": build_task(task.seed)}
 
 
 @app.post("/api/candidate/{token}/practical/submissions")
-async def submit_practical(token: str, package: UploadFile = File(...),
+async def submit_practical(token: str, answer: UploadFile = File(...),
                            db: Session = Depends(get_db)):
     application, _ = get_by_token(db, token)
     expire_or_timeout(db, application)
@@ -836,16 +824,16 @@ async def submit_practical(token: str, package: UploadFile = File(...),
     task = ensure_practical_task(db, application)
     if task.attempt_count >= 5:
         raise HTTPException(409, "已达到 5 次提交上限，请确认最终成绩")
-    raw = await package.read(MAX_PACKAGE_BYTES + 1)
+    raw = await answer.read(MAX_ANSWER_BYTES + 1)
     try:
-        score, breakdown, feedback = grade_package(task.seed, raw)
+        score, breakdown, feedback = grade_answer(task.seed, raw)
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from None
     task.attempt_count += 1
     task.submitted_at = utcnow()
     if score >= task.best_score:
         PRACTICAL_DIR.mkdir(parents=True, exist_ok=True)
-        path = (PRACTICAL_DIR / f"application-{application.id}-round-{application.assessment_round}-best.zip").resolve()
+        path = (PRACTICAL_DIR / f"application-{application.id}-round-{application.assessment_round}-best.json").resolve()
         if not path.is_relative_to(PRACTICAL_DIR):
             raise HTTPException(500, "提交路径无效")
         path.write_bytes(raw)
@@ -856,7 +844,7 @@ async def submit_practical(token: str, package: UploadFile = File(...),
     event(db, application, "practical_submitted", application.status, "candidate",
           f"attempt={task.attempt_count}; score={score}; best={task.best_score}")
     db.commit()
-    return practical_out(task) | {"score": score}
+    return practical_out(task) | {"score": score, "task": build_task(task.seed)}
 
 
 @app.post("/api/candidate/{token}/practical/finalize")

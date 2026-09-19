@@ -1,375 +1,329 @@
 from __future__ import annotations
 
-import io
 import json
-import math
 import random
-import zipfile
-from collections import defaultdict
-from pathlib import PurePosixPath
+from typing import Any
 
 
-TASK_VERSION = "agent-trace-diagnostics-v1"
-MAX_PACKAGE_BYTES = 5 * 1024 * 1024
-MAX_UNCOMPRESSED_BYTES = 10 * 1024 * 1024
-
-TOOLS = {
-    "db.query": ["db.query", "DB_QUERY", "sql-query", "database.search"],
-    "files.read": ["files.read", "FILE_READ", "read-file", "fs.open"],
-    "llm.generate": ["llm.generate", "LLM_GENERATE", "chat-completion", "model.call"],
-    "tests.run": ["tests.run", "TEST_RUN", "pytest", "check-suite"],
-    "web.search": ["web.search", "WEB_SEARCH", "search-web", "browser.query"],
-}
-AGENTS = ["planner", "researcher", "coder", "reviewer"]
-PRICING = {
-    "planner": {"input_per_1k_milliusd": 1.2, "output_per_1k_milliusd": 2.4},
-    "researcher": {"input_per_1k_milliusd": 0.8, "output_per_1k_milliusd": 1.8},
-    "coder": {"input_per_1k_milliusd": 1.5, "output_per_1k_milliusd": 3.0},
-    "reviewer": {"input_per_1k_milliusd": 1.0, "output_per_1k_milliusd": 2.0},
-}
+TASK_VERSION = "web-agent-investigation-v2"
+MAX_ANSWER_BYTES = 1024 * 1024
 
 
-def task_config() -> dict:
-    return {"schema_version": 1, "tool_aliases": TOOLS, "agent_pricing": PRICING}
-
-
-def generate_events(seed: int, run_count: int = 72) -> list[dict]:
-    rng = random.Random(seed)
-    events: list[dict] = []
-    for run_no in range(1, run_count + 1):
-        run_id = f"run-{run_no:03d}"
-        step_count = rng.randint(7, 11)
-        root_failure = rng.randint(2, step_count - 1) if rng.random() < 0.34 else None
-        descendants: set[int] = set()
-        parents_by_step: dict[int, list[int]] = {}
-        for step_no in range(1, step_count + 1):
-            parents = [] if step_no == 1 else [step_no - 1]
-            if step_no >= 4 and rng.random() < 0.38:
-                extra = rng.randint(1, step_no - 2)
-                if extra not in parents:
-                    parents.append(extra)
-            parents_by_step[step_no] = sorted(parents)
-            if root_failure and (root_failure in parents or any(p in descendants for p in parents)):
-                descendants.add(step_no)
-
-        for step_no in range(1, step_count + 1):
-            canonical = rng.choice(list(TOOLS))
-            alias = rng.choice(TOOLS[canonical])
-            agent = rng.choice(AGENTS)
-            attempts = 2 if rng.random() < 0.31 else 1
-            for attempt in range(1, attempts + 1):
-                event_id = f"{run_id}-s{step_no:02d}-a{attempt}"
-                if root_failure == step_no:
-                    status = "timeout" if attempt == attempts else "error"
-                elif step_no in descendants:
-                    status = "blocked"
-                elif attempt < attempts:
-                    status = rng.choice(["error", "timeout"])
-                else:
-                    status = "ok"
-                latency = rng.randint(90, 1800) + step_no * rng.randint(3, 21)
-                record = {
-                    "event_id": event_id,
-                    "ingest_seq": 1,
-                    "run_id": run_id,
-                    "step_id": f"step-{step_no:02d}",
-                    "step_no": step_no,
-                    "parent_steps": [f"step-{p:02d}" for p in parents_by_step[step_no]],
-                    "attempt": attempt,
-                    "agent": agent,
-                    "tool": alias,
-                    "status": status,
-                    "latency_ms": latency,
-                    "tokens_in": rng.randint(80, 1200),
-                    "tokens_out": rng.randint(30, 650),
-                }
-                events.append(record)
-                if rng.random() < 0.12:
-                    corrected = dict(record)
-                    corrected["ingest_seq"] = 2
-                    corrected["latency_ms"] = max(1, latency + rng.randint(-40, 120))
-                    events.append(corrected)
-    rng.shuffle(events)
-    return events
-
-
-def _canonical_tool(raw: str, aliases: dict[str, list[str]]) -> str:
-    normalized = raw.strip().casefold()
-    for name, values in aliases.items():
-        if normalized in {value.casefold() for value in values}:
-            return name
-    return normalized
-
-
-def _nearest_rank_p95(values: list[int]) -> int:
-    ordered = sorted(values)
-    return ordered[max(0, math.ceil(0.95 * len(ordered)) - 1)]
-
-
-def build_report(events: list[dict], config: dict) -> dict:
-    deduped: dict[str, dict] = {}
-    for event in events:
-        previous = deduped.get(event["event_id"])
-        if previous is None or event["ingest_seq"] > previous["ingest_seq"]:
-            deduped[event["event_id"]] = event
-    rows = [dict(row) for row in deduped.values()]
-    aliases = config["tool_aliases"]
-    pricing = config["agent_pricing"]
-    for row in rows:
-        row["canonical_tool"] = _canonical_tool(row["tool"], aliases)
-
-    by_run: dict[str, list[dict]] = defaultdict(list)
-    by_tool: dict[str, list[dict]] = defaultdict(list)
-    total_tokens = 0
-    total_cost = 0.0
-    for row in rows:
-        by_run[row["run_id"]].append(row)
-        by_tool[row["canonical_tool"]].append(row)
-        total_tokens += row["tokens_in"] + row["tokens_out"]
-        rates = pricing[row["agent"]]
-        total_cost += (row["tokens_in"] * rates["input_per_1k_milliusd"]
-                       + row["tokens_out"] * rates["output_per_1k_milliusd"]) / 1000
-
-    effective_by_run: dict[str, dict[str, dict]] = {}
-    successful_runs = 0
-    failed_runs = []
-    for run_id, run_rows in by_run.items():
-        effective: dict[str, dict] = {}
-        for row in run_rows:
-            previous = effective.get(row["step_id"])
-            if previous is None or row["attempt"] > previous["attempt"]:
-                effective[row["step_id"]] = row
-        effective_by_run[run_id] = effective
-        failed = sorted((row for row in effective.values() if row["status"] != "ok"),
-                        key=lambda row: row["step_no"])
-        if not failed:
-            successful_runs += 1
-            continue
-        root = failed[0]
-        children: dict[str, set[str]] = defaultdict(set)
-        for row in effective.values():
-            for parent in row["parent_steps"]:
-                children[parent].add(row["step_id"])
-        blocked: set[str] = set()
-        pending = list(children[root["step_id"]])
-        while pending:
-            step = pending.pop()
-            if step in blocked:
-                continue
-            blocked.add(step)
-            pending.extend(children[step])
-        failed_runs.append({
-            "run_id": run_id,
-            "root_cause_step": root["step_id"],
-            "root_cause_tool": root["canonical_tool"],
-            "blocked_steps": sorted(blocked),
-        })
-
-    tools = []
-    for name in sorted(by_tool):
-        tool_rows = by_tool[name]
-        retry_waste = 0
-        for run_id, effective in effective_by_run.items():
-            final_attempts = {step_id: row["attempt"] for step_id, row in effective.items()}
-            retry_waste += sum(row["latency_ms"] for row in by_run[run_id]
-                               if row["canonical_tool"] == name
-                               and row["attempt"] < final_attempts[row["step_id"]])
-        tools.append({
-            "name": name,
-            "calls": len(tool_rows),
-            "successful_calls": sum(row["status"] == "ok" for row in tool_rows),
-            "failed_calls": sum(row["status"] != "ok" for row in tool_rows),
-            "p95_latency_ms": _nearest_rank_p95([row["latency_ms"] for row in tool_rows]),
-            "retry_waste_ms": retry_waste,
-        })
-
-    bottlenecks = sorted(
-        ({"run_id": run_id, "total_latency_ms": sum(row["latency_ms"] for row in run_rows)}
-         for run_id, run_rows in by_run.items()),
-        key=lambda item: (-item["total_latency_ms"], item["run_id"]),
-    )[:5]
-    run_count = len(by_run)
-    return {
-        "schema_version": 1,
-        "summary": {
-            "run_count": run_count,
-            "success_count": successful_runs,
-            "failed_count": run_count - successful_runs,
-            "success_rate_pct": round(successful_runs * 100 / run_count, 2),
-            "total_tokens": total_tokens,
-            "total_cost_milliusd": round(total_cost, 3),
+FACT_BANK = [
+    {
+        "fact_id": "rfc9110_idempotent_methods",
+        "question": "RFC 9110 定义的请求方法中，哪些方法是幂等的？只返回方法名并按字母排序。",
+        "source_url": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
+        "source_section": "9.2.2",
+        "answer": ["DELETE", "GET", "HEAD", "OPTIONS", "PUT", "TRACE"],
+    },
+    {
+        "fact_id": "rfc9110_retry_after_forms",
+        "question": "RFC 9110 中 Retry-After 字段允许哪两种值形式？按字母排序。",
+        "source_url": "https://www.rfc-editor.org/rfc/rfc9110.html#section-10.2.3",
+        "source_section": "10.2.3",
+        "answer": ["HTTP-date", "delay-seconds"],
+    },
+    {
+        "fact_id": "rfc9110_non_idempotent_retry",
+        "question": "RFC 9110 允许客户端自动重试非幂等请求的两个前提是什么？使用题目约定的代码值。",
+        "source_url": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
+        "source_section": "9.2.2",
+        "answer": ["detect_original_never_applied", "known_idempotent_semantics"],
+        "answer_codes": {
+            "detect_original_never_applied": "能够检测原请求从未被应用",
+            "known_idempotent_semantics": "通过设计或配置知道请求语义实际幂等",
         },
-        "tools": tools,
-        "failed_runs": sorted(failed_runs, key=lambda item: item["run_id"]),
-        "top_bottlenecks": bottlenecks,
+    },
+    {
+        "fact_id": "rfc6585_429_contract",
+        "question": "根据 RFC 6585，填写 429 的缓存规则以及 Retry-After 的规范强度。",
+        "source_url": "https://www.rfc-editor.org/rfc/rfc6585.html#section-4",
+        "source_section": "4",
+        "answer": {"cacheable": False, "retry_after_requirement": "MAY", "status": 429},
+    },
+    {
+        "fact_id": "w3c_traceparent_fields",
+        "question": "W3C Trace Context 的 traceparent 头包含哪四个字段？按字母排序。",
+        "source_url": "https://www.w3.org/TR/trace-context/#traceparent-header",
+        "source_section": "3.2",
+        "answer": ["parent-id", "trace-flags", "trace-id", "version"],
+    },
+    {
+        "fact_id": "w3c_traceparent_sizes",
+        "question": "填写 trace-id、parent-id 的字节数，并判断版本 ff 是否有效。",
+        "source_url": "https://www.w3.org/TR/trace-context/#version-format",
+        "source_section": "3.2.2",
+        "answer": {"parent_id_bytes": 8, "trace_id_bytes": 16, "version_ff_valid": False},
+    },
+    {
+        "fact_id": "json_schema_boolean",
+        "question": "JSON Schema Draft 2020-12 中布尔 schema true 和 false 分别产生什么断言结果？",
+        "source_url": "https://json-schema.org/draft/2020-12/json-schema-core#section-4.3.2",
+        "source_section": "4.3.2",
+        "answer": {"false": "always_fails", "true": "always_passes"},
+        "answer_codes": {"always_fails": "始终验证失败", "always_passes": "始终验证通过"},
+    },
+    {
+        "fact_id": "json_schema_array_keywords",
+        "question": "Draft 2020-12 重构数组/元组关键字后，旧 items 和 additionalItems 分别由什么替代？",
+        "source_url": "https://json-schema.org/draft/2020-12",
+        "source_section": "Draft 2020-12 release notes",
+        "answer": {"additionalItems_replaced_by": "items", "items_replaced_by": "prefixItems"},
+    },
+    {
+        "fact_id": "openapi_parameter_locations",
+        "question": "OpenAPI 3.1.0 Parameter Object 允许的四种 in 位置是什么？按字母排序。",
+        "source_url": "https://spec.openapis.org/oas/v3.1.0#parameter-locations",
+        "source_section": "4.8.12.1",
+        "answer": ["cookie", "header", "path", "query"],
+    },
+    {
+        "fact_id": "openapi_minimum_document",
+        "question": "OpenAPI 3.1.0 文档必须至少包含 paths、components、webhooks 中几个字段？",
+        "source_url": "https://spec.openapis.org/oas/v3.1.0#openapi-document",
+        "source_section": "3.1",
+        "answer": {"minimum_required": 1, "qualifying_fields": ["components", "paths", "webhooks"]},
+    },
+    {
+        "fact_id": "owasp_agent_controls",
+        "question": "从 OWASP AI Agent Security 建议中选择题目指定的四类控制代码并按字母排序。",
+        "source_url": "https://cheatsheetseries.owasp.org/cheatsheets/AI_Agent_Security_Cheat_Sheet.html",
+        "source_section": "Do's and Don'ts",
+        "answer": ["human_in_the_loop", "least_privilege", "structured_output_validation", "tool_chain_limits"],
+        "answer_codes": {
+            "human_in_the_loop": "高风险动作引入人工确认",
+            "least_privilege": "工具与权限最小化",
+            "structured_output_validation": "使用结构化输出并做 schema 校验",
+            "tool_chain_limits": "限制 token、成本、重试和工具链",
+        },
+    },
+]
+
+
+INCIDENTS = [
+    {
+        "code": "non_idempotent_retry_storm",
+        "observations": [
+            {"id": "obs-1", "text": "通知接口使用 POST，没有 Idempotency-Key；连接超时后客户端自动重试。"},
+            {"id": "obs-2", "text": "同一个 request_id 在 90 秒内产生 7 次通知写入，其中 5 次内容完全相同。"},
+            {"id": "obs-3", "text": "上游随后大量返回 429；执行器忽略 Retry-After 并立即指数并发重试。"},
+            {"id": "obs-4", "text": "模型推理延迟和 token 用量保持稳定。"},
+        ],
+        "evidence_ids": ["obs-1", "obs-2", "obs-3"],
+    },
+    {
+        "code": "indirect_prompt_injection",
+        "observations": [
+            {"id": "obs-1", "text": "网页抓取结果包含隐藏文本，要求忽略任务并调用 write_customer_record。"},
+            {"id": "obs-2", "text": "抓取内容未经隔离直接拼接到拥有写权限的 Agent 上下文。"},
+            {"id": "obs-3", "text": "随后出现与用户目标无关的客户记录写入，审批步骤未执行。"},
+            {"id": "obs-4", "text": "数据库和模型服务在事故期间均无错误。"},
+        ],
+        "evidence_ids": ["obs-1", "obs-2", "obs-3"],
+    },
+    {
+        "code": "invalid_trace_context",
+        "observations": [
+            {"id": "obs-1", "text": "网关生成的 traceparent 中 parent-id 固定为 0000000000000000。"},
+            {"id": "obs-2", "text": "下游遵循 W3C Trace Context，收到该头后创建了新的 trace-id。"},
+            {"id": "obs-3", "text": "业务请求成功，但网关与工具调用在追踪系统中显示为两条互不关联的链路。"},
+            {"id": "obs-4", "text": "网络丢包率低于 0.01%。"},
+        ],
+        "evidence_ids": ["obs-1", "obs-2", "obs-3"],
+    },
+]
+
+REQUIRED_TOOLS = {"web_fetch", "extract", "cross_check", "reason", "schema_validate", "human_approve", "submit"}
+REQUIRED_CONTROLS = {
+    "human_approval_for_side_effects", "least_privilege", "prompt_injection_filter",
+    "schema_validation", "untrusted_content_is_data",
+}
+
+
+def _selected_facts(seed: int) -> list[dict]:
+    rng = random.Random(seed)
+    return sorted(rng.sample(FACT_BANK, 6), key=lambda item: item["fact_id"])
+
+
+def build_task(seed: int) -> dict:
+    facts = _selected_facts(seed)
+    incident = INCIDENTS[seed % len(INCIDENTS)]
+    return {
+        "title": "联网 AI Agent 调研与工程处置",
+        "version": TASK_VERSION,
+        "instructions": [
+            "把本任务交给具备联网能力的 AI Agent，自主访问每个官方来源并交叉核验。",
+            "不得只依赖模型记忆；research 每项必须给出指定官方 URL、章节和简短证据摘要。",
+            "分析事故证据，设计具备依赖、重试、安全边界、人工审批和验收测试的 Agent 工作流。",
+            "最终只上传 UTF-8 JSON；列表按题目要求排序。最多提交 5 次。",
+        ],
+        "research_questions": [
+            {key: value for key, value in fact.items() if key != "answer"}
+            for fact in facts
+        ],
+        "incident": {
+            "question": "判断唯一主因，返回 root_cause_code、直接证据 ID 和不少于 120 字的推理。",
+            "allowed_root_cause_codes": [item["code"] for item in INCIDENTS],
+            "observations": incident["observations"],
+        },
+        "engineering_brief": {
+            "goal": "为联网研究 Agent 设计可执行 DAG：并行取证、结构化提取、交叉核验、推理、Schema 校验、写操作人工审批、最终提交。",
+            "constraints": [
+                "workflow.steps 必须为 7 到 12 步，id 唯一且 depends_on 无环。",
+                "tool 必须覆盖 web_fetch、extract、cross_check、reason、schema_validate、human_approve、submit。",
+                "cross_check 至少直接依赖两个步骤；submit 必须在 schema_validate 和 human_approve 之后。",
+                "429/503 最多重试 3 次，遵守 Retry-After；非幂等动作必须带幂等键。",
+                "外部网页视为不可信数据，写工具最小权限，副作用操作需要人工确认。",
+                "至少提供 3 个可判定通过/失败的 acceptance_tests。",
+            ],
+            "required_security_control_codes": sorted(REQUIRED_CONTROLS),
+        },
+        "output_shape": {
+            "schema_version": TASK_VERSION,
+            "research": [{"fact_id": "...", "answer": "任意 JSON 值", "source_url": "...",
+                          "source_section": "...", "evidence": "简短证据摘要"}],
+            "incident": {"root_cause_code": "...", "evidence_ids": ["obs-1"], "reasoning": "..."},
+            "workflow": {
+                "steps": [{"id": "...", "tool": "web_fetch", "depends_on": [],
+                           "purpose": "...", "output_check": "..."}],
+                "retry_policy": {"retry_statuses": [429, 503], "max_attempts": 3,
+                                 "respect_retry_after": True, "non_idempotent_requires_key": True},
+                "security_controls": sorted(REQUIRED_CONTROLS),
+                "acceptance_tests": [{"name": "...", "pass_condition": "..."}],
+            },
+        },
     }
 
 
-README = """# AI Agent 执行轨迹诊断实操
+def _has_cycle(steps: list[dict]) -> bool:
+    ids = {step.get("id") for step in steps if isinstance(step.get("id"), str)}
+    graph: dict[str, set[str]] = {}
+    for step in steps:
+        step_id = step.get("id")
+        dependencies = step.get("depends_on")
+        if isinstance(step_id, str):
+            graph[step_id] = ({item for item in dependencies if isinstance(item, str)} & ids
+                              if isinstance(dependencies, list) else set())
+    visiting: set[str] = set()
+    visited: set[str] = set()
 
-这是一个候选人专属数据包。请编写程序分析乱序、含重试及重复修正记录的 Agent 轨迹。
+    def visit(node: str) -> bool:
+        if node in visiting:
+            return True
+        if node in visited:
+            return False
+        visiting.add(node)
+        if any(visit(parent) for parent in graph.get(node, set())):
+            return True
+        visiting.remove(node)
+        visited.add(node)
+        return False
 
-## 目标
-
-实现 `solution/solve.py`，读取 `input/events.jsonl` 和 `input/config.json`，生成 `output/report.json`。
-只允许使用 Python 3.11 标准库，不需要安装依赖。你可以并且建议使用 AI 编程工具完成，但需要自己运行、检查和迭代。
-
-## 核心规则
-
-1. 同一 `event_id` 只保留 `ingest_seq` 最大的记录。
-2. 根据 `tool_aliases` 做不区分大小写的工具名归一化。
-3. 每个步骤以 `attempt` 最大的记录作为最终状态；所有步骤最终状态均为 `ok` 才算运行成功。
-4. 失败运行的根因是 `step_no` 最小的非 `ok` 最终步骤；`blocked_steps` 是依赖图中它的全部传递后继。
-5. 工具调用统计使用去重后的全部尝试；`retry_waste_ms` 只累加非最终尝试。
-6. P95 使用 nearest-rank：排序后取 `ceil(0.95*n)` 对应值。
-7. 成本单位为 milliUSD，按配置中的每千 token 单价计算，最后四舍五入到 3 位小数。
-8. 所有列表排序必须稳定：tools 按 name；failed_runs 按 run_id；blocked_steps 字典序；top_bottlenecks 按总耗时降序、run_id 升序取前 5。
-
-输出结构可参考 `sample/expected_report.json`。可运行 `python verify.py output/report.json` 检查结构。
-
-## 提交
-
-提交一个 ZIP，至少包含：
-
-- `solution/solve.py`
-- `output/report.json`
-- `AI_WORKLOG.md`：简述使用的 AI 工具、关键提示策略、运行过的命令和一次修正过程
-
-最多提交 5 次；每次只返回分项结果，不泄露隐藏答案。最终确认后进入评分。
-"""
-
-STARTER = """from __future__ import annotations
-
-import json
-from pathlib import Path
+    return any(visit(node) for node in graph)
 
 
-def solve(events_path: Path, config_path: Path) -> dict:
-    # TODO: 实现去重、归一化、重试语义、依赖图和统计计算。
-    raise NotImplementedError
-
-
-if __name__ == "__main__":
-    root = Path(__file__).resolve().parents[1]
-    report = solve(root / "input" / "events.jsonl", root / "input" / "config.json")
-    output = root / "output" / "report.json"
-    output.parent.mkdir(exist_ok=True)
-    output.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"wrote {output}")
-"""
-
-VERIFY = """import json
-import sys
-from pathlib import Path
-
-path = Path(sys.argv[1] if len(sys.argv) > 1 else "output/report.json")
-data = json.loads(path.read_text(encoding="utf-8"))
-required = {"schema_version", "summary", "tools", "failed_runs", "top_bottlenecks"}
-missing = required - set(data)
-if missing:
-    raise SystemExit(f"missing keys: {sorted(missing)}")
-if data["schema_version"] != 1:
-    raise SystemExit("schema_version must be 1")
-if not all(isinstance(data[key], list) for key in ("tools", "failed_runs", "top_bottlenecks")):
-    raise SystemExit("tools/failed_runs/top_bottlenecks must be arrays")
-print("schema ok")
-"""
-
-
-def build_bundle(seed: int) -> bytes:
-    config = task_config()
-    events = generate_events(seed)
-    sample_events = generate_events(20260919, run_count=6)
-    sample_report = build_report(sample_events, config)
-    buffer = io.BytesIO()
-    with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-        archive.writestr("README.md", README)
-        archive.writestr("AI_WORKLOG.md", "# AI 协作记录\n\n请填写使用的工具、关键提示、运行命令和一次修正过程。\n")
-        archive.writestr("solution/solve.py", STARTER)
-        archive.writestr("verify.py", VERIFY)
-        archive.writestr("input/config.json", json.dumps(config, ensure_ascii=False, indent=2))
-        archive.writestr("input/events.jsonl", "\n".join(json.dumps(row, ensure_ascii=False) for row in events) + "\n")
-        archive.writestr("sample/config.json", json.dumps(config, ensure_ascii=False, indent=2))
-        archive.writestr("sample/events.jsonl", "\n".join(json.dumps(row, ensure_ascii=False) for row in sample_events) + "\n")
-        archive.writestr("sample/expected_report.json", json.dumps(sample_report, ensure_ascii=False, indent=2))
-        archive.writestr("output/.gitkeep", "")
-    return buffer.getvalue()
-
-
-def _safe_members(archive: zipfile.ZipFile) -> dict[str, zipfile.ZipInfo]:
-    members: dict[str, zipfile.ZipInfo] = {}
-    total = 0
-    for info in archive.infolist():
-        name = info.filename.replace("\\", "/")
-        while name.startswith("./"):
-            name = name[2:]
-        path = PurePosixPath(name)
-        if path.is_absolute() or ".." in path.parts or info.flag_bits & 0x1:
-            raise ValueError("ZIP 包含不安全路径或加密文件")
-        total += info.file_size
-        if total > MAX_UNCOMPRESSED_BYTES or info.file_size > 3 * 1024 * 1024:
-            raise ValueError("ZIP 解压后文件过大")
-        members[name] = info
-    return members
-
-
-def _find(members: dict[str, zipfile.ZipInfo], suffix: str) -> zipfile.ZipInfo | None:
-    matches = [info for name, info in members.items() if name == suffix or name.endswith("/" + suffix)]
-    return matches[0] if len(matches) == 1 else None
-
-
-def _fraction(actual, expected) -> float:
-    if not isinstance(actual, list) or len(actual) != len(expected):
-        return 0.0
-    total = 0
-    matched = 0
-    for actual_item, expected_item in zip(actual, expected):
-        if not isinstance(actual_item, dict):
+def _ancestors(step_id: str, by_id: dict[str, dict]) -> set[str]:
+    result: set[str] = set()
+    dependencies = by_id.get(step_id, {}).get("depends_on")
+    pending = [item for item in dependencies if isinstance(item, str)] if isinstance(dependencies, list) else []
+    while pending:
+        item = pending.pop()
+        if item in result:
             continue
-        for key, value in expected_item.items():
-            total += 1
-            matched += actual_item.get(key) == value
-    return matched / total if total else 1.0
+        result.add(item)
+        dependencies = by_id.get(item, {}).get("depends_on")
+        if isinstance(dependencies, list):
+            pending.extend(item for item in dependencies if isinstance(item, str))
+    return result
 
 
-def grade_package(seed: int, package: bytes) -> tuple[int, dict, list[str]]:
-    if not package or len(package) > MAX_PACKAGE_BYTES:
-        raise ValueError("提交包必须是不超过 5 MB 的 ZIP")
+def grade_answer(seed: int, raw: bytes) -> tuple[int, dict, list[str]]:
+    if not raw or len(raw) > MAX_ANSWER_BYTES:
+        raise ValueError("答案必须是不超过 1 MB 的 UTF-8 JSON 文件")
     try:
-        archive = zipfile.ZipFile(io.BytesIO(package))
-    except zipfile.BadZipFile as exc:
-        raise ValueError("提交文件不是有效 ZIP") from exc
-    with archive:
-        members = _safe_members(archive)
-        source_info = _find(members, "solution/solve.py")
-        report_info = _find(members, "output/report.json")
-        worklog_info = _find(members, "AI_WORKLOG.md")
-        if not source_info or not report_info or not worklog_info:
-            raise ValueError("ZIP 必须包含 solution/solve.py、output/report.json 和 AI_WORKLOG.md")
-        source = archive.read(source_info).decode("utf-8", errors="replace")
-        worklog = archive.read(worklog_info).decode("utf-8", errors="replace")
-        try:
-            actual = json.loads(archive.read(report_info))
-        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
-            raise ValueError("output/report.json 不是有效 UTF-8 JSON") from exc
+        answer: Any = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError("上传文件不是有效的 UTF-8 JSON") from exc
+    if not isinstance(answer, dict):
+        raise ValueError("JSON 顶层必须是对象")
 
-    expected = build_report(generate_events(seed), task_config())
-    package_points = 10 if len(source.strip()) >= 300 and len(worklog.strip()) >= 100 else 4
-    summary_expected = expected["summary"]
-    summary_actual = actual.get("summary", {}) if isinstance(actual, dict) else {}
-    summary_ratio = sum(summary_actual.get(k) == v for k, v in summary_expected.items()) / len(summary_expected)
-    breakdown = {
-        "package": package_points,
-        "summary": round(15 * summary_ratio),
-        "tools": round(30 * _fraction(actual.get("tools") if isinstance(actual, dict) else None, expected["tools"])),
-        "failed_runs": round(30 * _fraction(actual.get("failed_runs") if isinstance(actual, dict) else None, expected["failed_runs"])),
-        "bottlenecks": round(15 * _fraction(actual.get("top_bottlenecks") if isinstance(actual, dict) else None, expected["top_bottlenecks"])),
-    }
-    feedback = []
-    labels = {"package": "提交完整性", "summary": "总体汇总", "tools": "工具与重试统计",
-              "failed_runs": "失败根因与依赖传播", "bottlenecks": "性能瓶颈"}
-    maximums = {"package": 10, "summary": 15, "tools": 30, "failed_runs": 30, "bottlenecks": 15}
-    for key, points in breakdown.items():
-        if points < maximums[key]:
-            feedback.append(f"{labels[key]}仍有未通过项（{points}/{maximums[key]}）")
+    research = answer.get("research")
+    incident_answer = answer.get("incident")
+    workflow = answer.get("workflow")
+    schema_points = 10 if (answer.get("schema_version") == TASK_VERSION
+                           and isinstance(research, list)
+                           and isinstance(incident_answer, dict)
+                           and isinstance(workflow, dict)) else 4
+
+    expected_facts = _selected_facts(seed)
+    research_items = research if isinstance(research, list) else []
+    actual_facts = {item.get("fact_id"): item for item in research_items if isinstance(item, dict)}
+    research_raw = 0.0
+    for fact in expected_facts:
+        item = actual_facts.get(fact["fact_id"], {})
+        research_raw += 4 if item.get("answer") == fact["answer"] else 0
+        research_raw += 1.5 if item.get("source_url") == fact["source_url"] else 0
+        research_raw += 0.75 if item.get("source_section") == fact["source_section"] else 0
+        research_raw += 0.25 if len(str(item.get("evidence", "")).strip()) >= 20 else 0
+    research_points = round(40 * research_raw / (6 * 6.5))
+
+    expected_incident = INCIDENTS[seed % len(INCIDENTS)]
+    incident_points = 0
+    if isinstance(incident_answer, dict):
+        incident_points += 10 if incident_answer.get("root_cause_code") == expected_incident["code"] else 0
+        evidence_ids = incident_answer.get("evidence_ids")
+        incident_points += 6 if (isinstance(evidence_ids, list)
+                                 and all(isinstance(item, str) for item in evidence_ids)
+                                 and set(evidence_ids) == set(expected_incident["evidence_ids"])) else 0
+        incident_points += 4 if len(str(incident_answer.get("reasoning", "")).strip()) >= 120 else 0
+
+    workflow_points = 0
+    if isinstance(workflow, dict):
+        steps = workflow.get("steps") if isinstance(workflow.get("steps"), list) else []
+        valid_steps = [step for step in steps if isinstance(step, dict)]
+        ids = [step.get("id") for step in valid_steps]
+        by_id = {step.get("id"): step for step in valid_steps if isinstance(step.get("id"), str)}
+        tools = {step.get("tool") for step in valid_steps if isinstance(step.get("tool"), str)}
+        dependencies_valid = all(isinstance(step.get("depends_on"), list)
+                                 and all(isinstance(item, str) and item in by_id for item in step["depends_on"])
+                                 for step in valid_steps)
+        workflow_points += 4 if (7 <= len(valid_steps) <= 12
+                                 and all(isinstance(item, str) for item in ids)
+                                 and len(ids) == len(set(ids)) and dependencies_valid) else 0
+        workflow_points += 6 if REQUIRED_TOOLS <= tools else 0
+        workflow_points += 4 if valid_steps and not _has_cycle(valid_steps) else 0
+        cross = next((step for step in valid_steps if step.get("tool") == "cross_check"), None)
+        workflow_points += 3 if (cross and isinstance(cross.get("depends_on"), list)
+                                 and len(cross["depends_on"]) >= 2) else 0
+        submit = next((step for step in valid_steps if step.get("tool") == "submit"), None)
+        if submit and isinstance(submit.get("id"), str):
+            ancestor_tools = {by_id[item].get("tool") for item in _ancestors(submit.get("id"), by_id) if item in by_id}
+            workflow_points += 3 if {"schema_validate", "human_approve"} <= ancestor_tools else 0
+        retry = workflow.get("retry_policy", {})
+        retry = retry if isinstance(retry, dict) else {}
+        retry_statuses = retry.get("retry_statuses")
+        workflow_points += 5 if (isinstance(retry_statuses, list)
+                                 and all(isinstance(item, int) for item in retry_statuses)
+                                 and set(retry_statuses) == {429, 503}
+                                 and retry.get("max_attempts") in {1, 2, 3}
+                                 and retry.get("respect_retry_after") is True
+                                 and retry.get("non_idempotent_requires_key") is True) else 0
+        controls = workflow.get("security_controls")
+        workflow_points += 3 if (isinstance(controls, list)
+                                 and all(isinstance(item, str) for item in controls)
+                                 and REQUIRED_CONTROLS <= set(controls)) else 0
+        tests = workflow.get("acceptance_tests", [])
+        workflow_points += 2 if (isinstance(tests, list) and len(tests) >= 3
+                                 and all(isinstance(test, dict) and test.get("name") and test.get("pass_condition")
+                                         for test in tests)) else 0
+
+    breakdown = {"json_contract": schema_points, "web_research": research_points,
+                 "incident_reasoning": incident_points, "agent_engineering": workflow_points}
+    maximums = {"json_contract": 10, "web_research": 40,
+                "incident_reasoning": 20, "agent_engineering": 30}
+    labels = {"json_contract": "JSON 结构", "web_research": "联网检索与引用",
+              "incident_reasoning": "事故推理", "agent_engineering": "Agent 工程设计"}
+    feedback = [f"{labels[key]}仍有未通过项（{points}/{maximums[key]}）"
+                for key, points in breakdown.items() if points < maximums[key]]
     return sum(breakdown.values()), breakdown, feedback
