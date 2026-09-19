@@ -1,0 +1,3096 @@
+{
+  "title": "AI应用开发工程师技术选择题库",
+  "schema_version": "2.0",
+  "source_repository": "https://github.com/adongwanai/AgentGuide",
+  "notes": [
+    "全部为三选一单选题，且只有一个正确答案。",
+    "domain=AI 表示 AI/LLM/RAG/Agent/推理/评测相关。",
+    "domain=FULLSTACK 表示 Python/后端/API/数据库/缓存/DevOps/前端/工程实践相关。",
+    "difficulty 仅使用整数 1-5。",
+    "source_origin=AgentGuide 表示直接由仓库对应技术主题改写。",
+    "source_origin=Generated from AgentGuide ... 表示仓库开发岗路线覆盖该工程主题，但具体单选题为补充生成。",
+    "已排除 HR、入职时间、薪资、离职原因、自我介绍等非技术题。"
+  ],
+  "counts": {
+    "total": 205,
+    "AI": 125,
+    "FULLSTACK": 80
+  },
+  "questions": [
+    {
+      "id": "AI-001",
+      "domain": "AI",
+      "category": "LLM基础",
+      "difficulty": 1,
+      "question": "Tokenizer 的主要作用是什么？",
+      "options": {
+        "A": "直接计算最终答案",
+        "B": "把文本转换成模型可处理的 token ID 序列",
+        "C": "把模型权重转换成 JSON"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Tokenizer"
+    },
+    {
+      "id": "AI-002",
+      "domain": "AI",
+      "category": "LLM基础",
+      "difficulty": 2,
+      "question": "BPE 类分词算法的核心思想更接近哪项？",
+      "options": {
+        "A": "按空格切分后永不再处理",
+        "B": "从字符/子词出发，反复合并高频相邻单元",
+        "C": "强制每个词都映射为单个字符"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "BPE"
+    },
+    {
+      "id": "AI-003",
+      "domain": "AI",
+      "category": "LLM基础",
+      "difficulty": 2,
+      "question": "Temperature 调高通常会怎样影响生成？",
+      "options": {
+        "A": "输出分布更平坦，结果通常更随机",
+        "B": "上下文窗口自动增大",
+        "C": "模型参数量增加"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Sampling"
+    },
+    {
+      "id": "AI-004",
+      "domain": "AI",
+      "category": "LLM基础",
+      "difficulty": 2,
+      "question": "Top-p 采样中的 p 控制什么？",
+      "options": {
+        "A": "从累计概率达到阈值的一组候选 token 中采样",
+        "B": "训练数据中正样本比例",
+        "C": "固定只保留前 p 个字符"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Top-p"
+    },
+    {
+      "id": "AI-005",
+      "domain": "AI",
+      "category": "LLM基础",
+      "difficulty": 2,
+      "question": "Perplexity 越低通常表示什么？",
+      "options": {
+        "A": "模型生成文本一定更长",
+        "B": "模型对测试序列的概率预测通常更好",
+        "C": "模型参数一定更多"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Perplexity"
+    },
+    {
+      "id": "AI-006",
+      "domain": "AI",
+      "category": "Transformer",
+      "difficulty": 2,
+      "question": "Self-Attention 中 Q、K、V 通常如何得到？",
+      "options": {
+        "A": "从数据库分别读取",
+        "B": "由输入隐藏状态经过不同线性投影得到",
+        "C": "由三个独立 tokenizer 直接生成"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "QKV"
+    },
+    {
+      "id": "AI-007",
+      "domain": "AI",
+      "category": "Transformer",
+      "difficulty": 2,
+      "question": "Scaled Dot-Product Attention 为什么要除以 √d_k？",
+      "options": {
+        "A": "抑制维度增大导致点积过大和 Softmax 饱和",
+        "B": "让注意力矩阵变成整数",
+        "C": "让模型只能关注相邻 token"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Attention scaling"
+    },
+    {
+      "id": "AI-008",
+      "domain": "AI",
+      "category": "Transformer",
+      "difficulty": 2,
+      "question": "Multi-Head Attention 的主要价值是什么？",
+      "options": {
+        "A": "保证模型不会过拟合",
+        "B": "让模型不需要位置编码",
+        "C": "允许不同注意力头学习不同表示子空间中的关系"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "MHA"
+    },
+    {
+      "id": "AI-009",
+      "domain": "AI",
+      "category": "Transformer",
+      "difficulty": 2,
+      "question": "Decoder-only 模型里的 Causal Mask 主要做什么？",
+      "options": {
+        "A": "阻止当前位置看到自己",
+        "B": "让所有 token 权重完全相同",
+        "C": "阻止当前位置看到未来 token"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Causal mask"
+    },
+    {
+      "id": "AI-010",
+      "domain": "AI",
+      "category": "Transformer",
+      "difficulty": 2,
+      "question": "Transformer 为什么需要位置编码？",
+      "options": {
+        "A": "Softmax 只接受有序整数",
+        "B": "Embedding 无法表达任何语义",
+        "C": "纯 Self-Attention 本身不天然表达 token 顺序"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Position encoding"
+    },
+    {
+      "id": "AI-011",
+      "domain": "AI",
+      "category": "Transformer",
+      "difficulty": 3,
+      "question": "RoPE 的主要做法是什么？",
+      "options": {
+        "A": "只在输出层增加位置分类器",
+        "B": "为每个 token 添加随机噪声",
+        "C": "对 Query/Key 施加与位置相关的旋转变换"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "RoPE"
+    },
+    {
+      "id": "AI-012",
+      "domain": "AI",
+      "category": "Transformer",
+      "difficulty": 3,
+      "question": "Self-Attention 与 Cross-Attention 最关键的区别是什么？",
+      "options": {
+        "A": "Cross-Attention 不计算 Q",
+        "B": "Self-Attention 不使用 Softmax",
+        "C": "Cross-Attention 的 Q 与 K/V 可以来自不同序列"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Self/Cross Attention"
+    },
+    {
+      "id": "AI-013",
+      "domain": "AI",
+      "category": "Transformer",
+      "difficulty": 3,
+      "question": "GQA 的典型特点是什么？",
+      "options": {
+        "A": "多个 Query Head 分组共享较少的 K/V Head",
+        "B": "完全取消 K/V",
+        "C": "每个 Query Head 必须有完全独立的 K/V"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "GQA"
+    },
+    {
+      "id": "AI-014",
+      "domain": "AI",
+      "category": "Transformer",
+      "difficulty": 3,
+      "question": "MQA 的典型特点是什么？",
+      "options": {
+        "A": "每个 Query Head 都有独立 K/V",
+        "B": "多个 Query Head 共享同一组 K/V Head",
+        "C": "不使用 Attention"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "MQA"
+    },
+    {
+      "id": "AI-015",
+      "domain": "AI",
+      "category": "Transformer",
+      "difficulty": 4,
+      "question": "FlashAttention 提速和节省显存的关键更接近哪项？",
+      "options": {
+        "A": "IO-aware 分块计算，减少 HBM 读写和中间矩阵存储",
+        "B": "完全删除 Softmax",
+        "C": "把 Attention 权重固定为均匀分布"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "FlashAttention"
+    },
+    {
+      "id": "AI-016",
+      "domain": "AI",
+      "category": "Transformer",
+      "difficulty": 2,
+      "question": "Transformer 中 FFN 的主要作用是什么？",
+      "options": {
+        "A": "保存全部 KV Cache",
+        "B": "对每个位置的表示做非线性特征变换",
+        "C": "执行 tokenizer 分词"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "FFN"
+    },
+    {
+      "id": "AI-017",
+      "domain": "AI",
+      "category": "Transformer",
+      "difficulty": 2,
+      "question": "Residual Connection 的主要作用是什么？",
+      "options": {
+        "A": "强制所有参数相等",
+        "B": "帮助深层网络梯度传播并保留原始信息",
+        "C": "让模型不需要归一化"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Residual"
+    },
+    {
+      "id": "AI-018",
+      "domain": "AI",
+      "category": "Transformer",
+      "difficulty": 2,
+      "question": "LayerNorm 为什么常用于 Transformer？",
+      "options": {
+        "A": "必须依赖很大 batch",
+        "B": "只能用于 CNN",
+        "C": "主要在单样本特征维度归一化，对 batch size 依赖较小"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "LayerNorm"
+    },
+    {
+      "id": "AI-019",
+      "domain": "AI",
+      "category": "LLM基础",
+      "difficulty": 3,
+      "question": "Scaling Law 通常描述什么？",
+      "options": {
+        "A": "GPU 数量与 Prompt 字数的固定等式",
+        "B": "数据库行数与模型精度的关系",
+        "C": "模型性能与参数量、数据量、计算量之间的经验关系"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Scaling law"
+    },
+    {
+      "id": "AI-020",
+      "domain": "AI",
+      "category": "LLM基础",
+      "difficulty": 3,
+      "question": "Chinchilla 工作的重要启示是什么？",
+      "options": {
+        "A": "训练数据越少越好",
+        "B": "只要增大参数，不必增加数据",
+        "C": "固定计算预算下要平衡模型规模与训练 token 数"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Chinchilla"
+    },
+    {
+      "id": "AI-021",
+      "domain": "AI",
+      "category": "模型架构",
+      "difficulty": 3,
+      "question": "Sparse MoE 的典型优势是什么？",
+      "options": {
+        "A": "每个 token 只激活部分专家，可提高总参数容量而控制计算量",
+        "B": "不需要路由器",
+        "C": "每个 token 必须执行全部专家"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "MoE"
+    },
+    {
+      "id": "AI-022",
+      "domain": "AI",
+      "category": "模型架构",
+      "difficulty": 4,
+      "question": "MoE 出现专家负载严重不均时，常见处理办法是什么？",
+      "options": {
+        "A": "随机删除大部分数据",
+        "B": "增加负载均衡损失或路由约束",
+        "C": "永久关闭除一个专家外的所有专家"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "MoE load balancing"
+    },
+    {
+      "id": "AI-023",
+      "domain": "AI",
+      "category": "机器学习",
+      "difficulty": 2,
+      "question": "训练集效果很好而验证集明显较差，通常是什么问题？",
+      "options": {
+        "A": "标签一定完全正确",
+        "B": "过拟合",
+        "C": "欠拟合"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Overfitting"
+    },
+    {
+      "id": "AI-024",
+      "domain": "AI",
+      "category": "机器学习",
+      "difficulty": 2,
+      "question": "L1 正则化相比 L2 更容易带来什么效果？",
+      "options": {
+        "A": "让梯度恒为 1",
+        "B": "所有权重变成相同值",
+        "C": "产生更稀疏的权重"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Regularization"
+    },
+    {
+      "id": "AI-025",
+      "domain": "AI",
+      "category": "机器学习",
+      "difficulty": 2,
+      "question": "Adam 优化器的核心机制是什么？",
+      "options": {
+        "A": "完全不计算梯度",
+        "B": "每步都随机改变权重",
+        "C": "利用梯度一阶矩和二阶矩估计进行自适应更新"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Adam"
+    },
+    {
+      "id": "AI-026",
+      "domain": "AI",
+      "category": "推理部署",
+      "difficulty": 2,
+      "question": "自回归 LLM 中 KV Cache 主要缓存什么？",
+      "options": {
+        "A": "训练阶段全部梯度",
+        "B": "最终自然语言答案",
+        "C": "历史 token 已计算出的 Key 和 Value"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "KV Cache"
+    },
+    {
+      "id": "AI-027",
+      "domain": "AI",
+      "category": "推理部署",
+      "difficulty": 2,
+      "question": "KV Cache 能提升生成速度的主要原因是什么？",
+      "options": {
+        "A": "减少 tokenizer 词表大小",
+        "B": "让模型一次生成所有未来 token",
+        "C": "避免每生成新 token 都重复计算全部历史 token 的 K/V"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "KV Cache"
+    },
+    {
+      "id": "AI-028",
+      "domain": "AI",
+      "category": "推理部署",
+      "difficulty": 3,
+      "question": "Prefix Cache 最适合哪类请求？",
+      "options": {
+        "A": "每个请求完全不同且无公共前缀",
+        "B": "只用于模型训练",
+        "C": "多个请求共享较长相同前缀"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Prefix cache"
+    },
+    {
+      "id": "AI-029",
+      "domain": "AI",
+      "category": "推理部署",
+      "difficulty": 4,
+      "question": "vLLM 的 PagedAttention 核心思想是什么？",
+      "options": {
+        "A": "完全取消 KV Cache",
+        "B": "把 KV Cache 存入关系数据库",
+        "C": "以 block 管理 KV Cache，并允许映射到非连续物理内存"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "PagedAttention"
+    },
+    {
+      "id": "AI-030",
+      "domain": "AI",
+      "category": "推理部署",
+      "difficulty": 3,
+      "question": "Continuous Batching 主要用于什么？",
+      "options": {
+        "A": "让每个请求独占 GPU",
+        "B": "等待整批请求全部完成才接下一批",
+        "C": "动态把新请求加入执行批次以提高 GPU 利用率"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Continuous batching"
+    },
+    {
+      "id": "AI-031",
+      "domain": "AI",
+      "category": "推理部署",
+      "difficulty": 3,
+      "question": "TTFT 指什么？",
+      "options": {
+        "A": "从请求开始到收到第一个生成 token 的时间",
+        "B": "相邻输出 token 的平均间隔",
+        "C": "模型训练一个 epoch 的时间"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "TTFT"
+    },
+    {
+      "id": "AI-032",
+      "domain": "AI",
+      "category": "推理部署",
+      "difficulty": 3,
+      "question": "TPOT 更接近衡量什么？",
+      "options": {
+        "A": "数据库建索引耗时",
+        "B": "首 token 之后每个输出 token 的生成时间",
+        "C": "Embedding 训练耗时"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "TPOT"
+    },
+    {
+      "id": "AI-033",
+      "domain": "AI",
+      "category": "推理部署",
+      "difficulty": 3,
+      "question": "一个 LLM API 总耗时 30 秒，第一步最合理的排查方式是什么？",
+      "options": {
+        "A": "直接增加 Agent 数量",
+        "B": "先把超时改成 10 分钟",
+        "C": "拆分记录检索、工具、TTFT、生成等阶段耗时"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Latency profiling"
+    },
+    {
+      "id": "AI-034",
+      "domain": "AI",
+      "category": "推理部署",
+      "difficulty": 2,
+      "question": "模型量化的主要目的通常是什么？",
+      "options": {
+        "A": "降低显存和推理成本，并可能提高吞吐",
+        "B": "保证零精度损失",
+        "C": "让参数数量增加"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Quantization"
+    },
+    {
+      "id": "AI-035",
+      "domain": "AI",
+      "category": "推理部署",
+      "difficulty": 3,
+      "question": "INT8/INT4 量化最需要关注的权衡是什么？",
+      "options": {
+        "A": "文件名长度与速度",
+        "B": "Prompt 字体与延迟",
+        "C": "资源收益与模型精度损失之间的权衡"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Quantization"
+    },
+    {
+      "id": "AI-036",
+      "domain": "AI",
+      "category": "推理部署",
+      "difficulty": 3,
+      "question": "Tensor Parallelism 的典型含义是什么？",
+      "options": {
+        "A": "把同一层中的张量计算切分到多个设备",
+        "B": "只对输入数据排序",
+        "C": "每台机器运行完全不同模型并随机选择"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Tensor parallelism"
+    },
+    {
+      "id": "AI-037",
+      "domain": "AI",
+      "category": "推理部署",
+      "difficulty": 3,
+      "question": "Pipeline Parallelism 的典型含义是什么？",
+      "options": {
+        "A": "只复制 tokenizer",
+        "B": "把不同模型层放到不同设备并流水执行",
+        "C": "把同一矩阵按列切分"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Pipeline parallelism"
+    },
+    {
+      "id": "AI-038",
+      "domain": "AI",
+      "category": "推理部署",
+      "difficulty": 4,
+      "question": "DeepSpeed ZeRO-3 相比 ZeRO-1/2 进一步分片什么？",
+      "options": {
+        "A": "输入 token",
+        "B": "日志文件",
+        "C": "模型参数"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "ZeRO"
+    },
+    {
+      "id": "AI-039",
+      "domain": "AI",
+      "category": "向量数据库",
+      "difficulty": 3,
+      "question": "HNSW 属于哪类 ANN 方法？",
+      "options": {
+        "A": "纯倒排关键词检索",
+        "B": "全量线性扫描",
+        "C": "基于多层近邻图的近似最近邻搜索"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "HNSW"
+    },
+    {
+      "id": "AI-040",
+      "domain": "AI",
+      "category": "向量数据库",
+      "difficulty": 3,
+      "question": "IVF 类向量索引的核心思想是什么？",
+      "options": {
+        "A": "先聚类/分桶，只搜索部分候选簇",
+        "B": "只按字符串前缀搜索",
+        "C": "复制所有向量后全量扫描"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "IVF"
+    },
+    {
+      "id": "AI-041",
+      "domain": "AI",
+      "category": "向量数据库",
+      "difficulty": 3,
+      "question": "增大 efSearch 或 nprobe 通常会有什么影响？",
+      "options": {
+        "A": "召回可能提高，但查询延迟通常也增加",
+        "B": "召回一定下降",
+        "C": "对召回和延迟都没有影响"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "ANN tuning"
+    },
+    {
+      "id": "AI-042",
+      "domain": "AI",
+      "category": "推理部署",
+      "difficulty": 3,
+      "question": "Semantic Cache 更适合缓存什么？",
+      "options": {
+        "A": "语义相近请求可复用的模型或检索结果",
+        "B": "随机生成的日志 ID",
+        "C": "GPU 风扇转速"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Semantic cache"
+    },
+    {
+      "id": "AI-043",
+      "domain": "AI",
+      "category": "推理部署",
+      "difficulty": 3,
+      "question": "LLM Gateway 的核心价值之一是什么？",
+      "options": {
+        "A": "替代模型本身完成推理",
+        "B": "把向量数据库变成关系数据库",
+        "C": "统一多个模型供应商接口并做路由、限流和成本治理"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "LLM Gateway"
+    },
+    {
+      "id": "AI-044",
+      "domain": "AI",
+      "category": "推理部署",
+      "difficulty": 4,
+      "question": "高峰流量下保护 LLM 服务更合理的方式是什么？",
+      "options": {
+        "A": "关闭所有监控",
+        "B": "无限接受请求直到崩溃",
+        "C": "限流、排队、超时、熔断和降级"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Rate limiting"
+    },
+    {
+      "id": "AI-045",
+      "domain": "AI",
+      "category": "推理部署",
+      "difficulty": 4,
+      "question": "当请求包含大量重复系统提示词时，哪项通常最有助于降低 prefill 成本？",
+      "options": {
+        "A": "使用 Prompt/Prefix Cache 或缓存友好的固定前缀",
+        "B": "增加随机前缀",
+        "C": "不断复制系统提示词"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Prompt cache"
+    },
+    {
+      "id": "AI-046",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 1,
+      "question": "RAG 的核心流程是什么？",
+      "options": {
+        "A": "先检索相关外部知识，再把它作为上下文交给模型生成",
+        "B": "先全量微调模型再查询数据库",
+        "C": "只提高 temperature 后直接回答"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "RAG core"
+    },
+    {
+      "id": "AI-047",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 2,
+      "question": "相比把业务知识全部微调进模型，RAG 的典型优势是什么？",
+      "options": {
+        "A": "一定比微调便宜 100 倍",
+        "B": "一定不会出现幻觉",
+        "C": "知识更新更灵活，通常无需每次更新都重新训练模型"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "RAG vs finetune"
+    },
+    {
+      "id": "AI-048",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 2,
+      "question": "Chunk 过大最常见的问题是什么？",
+      "options": {
+        "A": "Embedding 无法处理任何文本",
+        "B": "容易混入更多无关信息并增加上下文成本",
+        "C": "文档一定丢失"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Chunking"
+    },
+    {
+      "id": "AI-049",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 2,
+      "question": "Chunk 过小最常见的问题是什么？",
+      "options": {
+        "A": "召回一定更准确",
+        "B": "语义上下文容易被切碎，单块信息不足",
+        "C": "模型参数自动减少"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Chunking"
+    },
+    {
+      "id": "AI-050",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 2,
+      "question": "Chunk Overlap 的主要目的是什么？",
+      "options": {
+        "A": "减少关键语义落在切分边界而丢失上下文",
+        "B": "复制整篇文档",
+        "C": "降低向量维度"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Chunk overlap"
+    },
+    {
+      "id": "AI-051",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 2,
+      "question": "Embedding 在 RAG 中主要做什么？",
+      "options": {
+        "A": "把文本映射到可比较语义相似度的向量空间",
+        "B": "直接生成最终答案",
+        "C": "把文本转成 SQL"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Embedding"
+    },
+    {
+      "id": "AI-052",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 2,
+      "question": "Cosine Similarity 更关注什么？",
+      "options": {
+        "A": "两个文件的字节大小",
+        "B": "两个字符串长度",
+        "C": "两个向量方向的相似程度"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Cosine similarity"
+    },
+    {
+      "id": "AI-053",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 2,
+      "question": "BM25 属于什么类型的检索？",
+      "options": {
+        "A": "基于词项匹配与统计权重的稀疏检索",
+        "B": "图神经网络检索",
+        "C": "生成式神经网络检索"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "BM25"
+    },
+    {
+      "id": "AI-054",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 3,
+      "question": "Hybrid Search 通常指什么？",
+      "options": {
+        "A": "运行两个相同 Embedding 模型",
+        "B": "组合稀疏关键词检索与稠密向量检索",
+        "C": "只使用 SQL LIKE"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Hybrid search"
+    },
+    {
+      "id": "AI-055",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 3,
+      "question": "Reranker 的主要作用是什么？",
+      "options": {
+        "A": "对初步召回候选进行更精细的相关性排序",
+        "B": "替代文档解析",
+        "C": "训练 Embedding 参数"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Reranker"
+    },
+    {
+      "id": "AI-056",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 3,
+      "question": "Cross-Encoder Reranker 为什么通常比双塔向量检索慢？",
+      "options": {
+        "A": "需要对 query 和候选文档联合编码打分",
+        "B": "完全不使用 GPU",
+        "C": "必须运行 100 个模型"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Cross encoder"
+    },
+    {
+      "id": "AI-057",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 3,
+      "question": "Recall@K 主要衡量什么？",
+      "options": {
+        "A": "每秒生成 K 个 token 的速度",
+        "B": "相关目标是否被 Top-K 检索结果覆盖",
+        "C": "Top-K 全部为正确答案的比例"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Recall@K"
+    },
+    {
+      "id": "AI-058",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 3,
+      "question": "MRR 更关注什么？",
+      "options": {
+        "A": "向量维度",
+        "B": "所有文档平均长度",
+        "C": "第一个相关结果出现得有多靠前"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "MRR"
+    },
+    {
+      "id": "AI-059",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 3,
+      "question": "Hit Rate@K 通常表示什么？",
+      "options": {
+        "A": "Top-K 中至少出现一个相关结果的命中比例",
+        "B": "缓存每秒命中次数",
+        "C": "Top-K 中错误字符数量"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Hit Rate"
+    },
+    {
+      "id": "AI-060",
+      "domain": "AI",
+      "category": "RAG评测",
+      "difficulty": 3,
+      "question": "Faithfulness 更接近衡量什么？",
+      "options": {
+        "A": "回答字数是否足够长",
+        "B": "回答中的结论是否能被提供的上下文支持",
+        "C": "检索耗时是否小于 1 秒"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Faithfulness"
+    },
+    {
+      "id": "AI-061",
+      "domain": "AI",
+      "category": "RAG评测",
+      "difficulty": 3,
+      "question": "Answer Relevancy 更关注什么？",
+      "options": {
+        "A": "上下文是否来自同一数据库",
+        "B": "模型参数是否够多",
+        "C": "回答是否切中用户问题"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Answer relevancy"
+    },
+    {
+      "id": "AI-062",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 3,
+      "question": "Lost in the Middle 描述什么现象？",
+      "options": {
+        "A": "长上下文中间位置的重要信息更容易被忽略",
+        "B": "索引中间节点必然失效",
+        "C": "中间层参数自动丢失"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Lost in the middle"
+    },
+    {
+      "id": "AI-063",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 3,
+      "question": "检索结果噪声很多时，优先优化什么？",
+      "options": {
+        "A": "关闭检索让模型凭记忆回答",
+        "B": "无条件把 TopK 调到 1000",
+        "C": "数据清洗、切块、召回过滤和 rerank"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "RAG noise"
+    },
+    {
+      "id": "AI-064",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 3,
+      "question": "Query Rewrite 常用于什么？",
+      "options": {
+        "A": "修改模型权重",
+        "B": "把用户原始问题改写成更适合检索的查询",
+        "C": "把向量降成一维"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Query rewrite"
+    },
+    {
+      "id": "AI-065",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 3,
+      "question": "Multi-Query Retrieval 的主要目的是什么？",
+      "options": {
+        "A": "并行输出多个最终答案随机选择",
+        "B": "把所有文档重复索引",
+        "C": "从多个不同表达角度提升召回覆盖"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Multi-query"
+    },
+    {
+      "id": "AI-066",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 4,
+      "question": "GraphRAG 更适合哪类问题？",
+      "options": {
+        "A": "矩阵乘法任务",
+        "B": "需要实体关系、多跳关联或全局结构理解的问题",
+        "C": "单句 FAQ 的精确关键词匹配"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "GraphRAG"
+    },
+    {
+      "id": "AI-067",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 3,
+      "question": "知识库增量更新最合理的做法是什么？",
+      "options": {
+        "A": "只处理新增或变更内容，并维护索引版本",
+        "B": "每次新增文档都无条件全量重建",
+        "C": "完全不更新向量索引"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Incremental indexing"
+    },
+    {
+      "id": "AI-068",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 3,
+      "question": "多租户 RAG 的关键安全要求是什么？",
+      "options": {
+        "A": "所有租户共享无过滤向量空间",
+        "B": "让模型自己猜 tenant_id",
+        "C": "租户数据与检索空间必须隔离"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Multi-tenant RAG"
+    },
+    {
+      "id": "AI-069",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 4,
+      "question": "检索 Recall 已较高，但答案仍经常错误，下一步优先检查什么？",
+      "options": {
+        "A": "继续无脑增大 TopK",
+        "B": "删除评测集",
+        "C": "Rerank、上下文组织、Prompt 和生成阶段是否正确使用证据"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "RAG troubleshooting"
+    },
+    {
+      "id": "AI-070",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 4,
+      "question": "同时存在产品型号关键词和大量自然语言说明时，通常更稳妥的检索方案是什么？",
+      "options": {
+        "A": "只按创建时间排序",
+        "B": "BM25 + Dense Retrieval 混合，再视情况 rerank",
+        "C": "只用随机搜索"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Hybrid retrieval"
+    },
+    {
+      "id": "AI-071",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 3,
+      "question": "Metadata Filter 的典型用途是什么？",
+      "options": {
+        "A": "提高 LLM 参数量",
+        "B": "在语义检索前后根据租户、时间、类型等字段缩小候选范围",
+        "C": "替代 Embedding"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Metadata filter"
+    },
+    {
+      "id": "AI-072",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 3,
+      "question": "Parent-Child Chunking 的主要目的是什么？",
+      "options": {
+        "A": "让所有 chunk 长度相同",
+        "B": "用较小块检索，同时返回更完整的父级上下文",
+        "C": "删除文档层级"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Parent-child retrieval"
+    },
+    {
+      "id": "AI-073",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 4,
+      "question": "Agentic RAG 相比固定 RAG Pipeline 的典型特点是什么？",
+      "options": {
+        "A": "一定不使用向量数据库",
+        "B": "只允许单次检索",
+        "C": "模型可动态决定是否检索、如何改写查询或继续追加检索"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Agentic RAG"
+    },
+    {
+      "id": "AI-074",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 4,
+      "question": "引用溯源设计最核心的价值是什么？",
+      "options": {
+        "A": "增加模型参数",
+        "B": "减少 tokenizer 词表",
+        "C": "让用户能够验证回答依据并方便审计错误来源"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Citation"
+    },
+    {
+      "id": "AI-075",
+      "domain": "AI",
+      "category": "RAG",
+      "difficulty": 4,
+      "question": "评测 RAG 时为什么要把检索指标和生成指标分开看？",
+      "options": {
+        "A": "便于判断错误来自召回阶段还是生成阶段",
+        "B": "因为生成阶段不需要评测",
+        "C": "因为两类指标永远数值相同"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "RAG evaluation"
+    },
+    {
+      "id": "AI-076",
+      "domain": "AI",
+      "category": "Agent",
+      "difficulty": 1,
+      "question": "LLM Agent 相比普通聊天模型通常增加什么能力？",
+      "options": {
+        "A": "围绕目标进行状态管理、工具调用和多步行动",
+        "B": "完全不依赖 LLM",
+        "C": "一定拥有更多参数"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Agent concept"
+    },
+    {
+      "id": "AI-077",
+      "domain": "AI",
+      "category": "Agent",
+      "difficulty": 2,
+      "question": "ReAct 的核心思想是什么？",
+      "options": {
+        "A": "在推理与行动/工具使用之间交替迭代",
+        "B": "只生成一次最终答案",
+        "C": "只执行工具不做判断"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "ReAct"
+    },
+    {
+      "id": "AI-078",
+      "domain": "AI",
+      "category": "Agent",
+      "difficulty": 2,
+      "question": "Function Calling 的合理执行流程是什么？",
+      "options": {
+        "A": "模型返回工具名和参数，宿主程序校验执行，再反馈结果",
+        "B": "模型写数据库后自动完成任务",
+        "C": "模型直接获得服务器 root 权限执行任意代码"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Function Calling"
+    },
+    {
+      "id": "AI-079",
+      "domain": "AI",
+      "category": "Agent",
+      "difficulty": 3,
+      "question": "Tool Schema 描述不清楚最容易导致什么？",
+      "options": {
+        "A": "模型选错工具或参数生成错误",
+        "B": "数据库索引自动失效",
+        "C": "模型权重立即损坏"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Tool schema"
+    },
+    {
+      "id": "AI-080",
+      "domain": "AI",
+      "category": "Agent",
+      "difficulty": 3,
+      "question": "Agent 工具调用失败时最合理的生产处理方式是什么？",
+      "options": {
+        "A": "伪造成功结果",
+        "B": "无限重试",
+        "C": "超时、有限重试、错误记录和 fallback"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Tool resilience"
+    },
+    {
+      "id": "AI-081",
+      "domain": "AI",
+      "category": "Agent",
+      "difficulty": 3,
+      "question": "为什么 Agent 通常要设置最大步数？",
+      "options": {
+        "A": "防止循环失控、成本失控和无法终止",
+        "B": "让每一步都换不同模型",
+        "C": "让模型一定更聪明"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Loop guard"
+    },
+    {
+      "id": "AI-082",
+      "domain": "AI",
+      "category": "Agent",
+      "difficulty": 3,
+      "question": "Agent State 的主要作用是什么？",
+      "options": {
+        "A": "永久保存模型权重",
+        "B": "保存多步骤执行中的共享状态和中间结果",
+        "C": "替代数据库索引"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Agent state"
+    },
+    {
+      "id": "AI-083",
+      "domain": "AI",
+      "category": "Agent Memory",
+      "difficulty": 3,
+      "question": "短期 Memory 更适合保存什么？",
+      "options": {
+        "A": "所有用户永久画像",
+        "B": "整个互联网数据",
+        "C": "当前会话近期上下文和任务状态"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Short-term memory"
+    },
+    {
+      "id": "AI-084",
+      "domain": "AI",
+      "category": "Agent Memory",
+      "difficulty": 3,
+      "question": "长期 Memory 更适合保存什么？",
+      "options": {
+        "A": "函数局部变量",
+        "B": "每个 token 的 logits",
+        "C": "跨会话仍有价值且经过筛选的信息"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Long-term memory"
+    },
+    {
+      "id": "AI-085",
+      "domain": "AI",
+      "category": "Agent Memory",
+      "difficulty": 4,
+      "question": "长期记忆很多时，常见检索方式是什么？",
+      "options": {
+        "A": "删除全部 metadata",
+        "B": "每次把全部记忆塞入上下文",
+        "C": "基于结构化索引或向量检索按需召回"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Memory retrieval"
+    },
+    {
+      "id": "AI-086",
+      "domain": "AI",
+      "category": "Agent Memory",
+      "difficulty": 3,
+      "question": "Memory 衰退/遗忘机制的主要目的是什么？",
+      "options": {
+        "A": "让 Agent 永远忘记所有内容",
+        "B": "提高模型参数量",
+        "C": "减少陈旧或低价值信息干扰当前任务"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Memory decay"
+    },
+    {
+      "id": "AI-087",
+      "domain": "AI",
+      "category": "Agent",
+      "difficulty": 3,
+      "question": "多用户 Agent 避免记忆串话的关键是什么？",
+      "options": {
+        "A": "让模型按语气猜用户",
+        "B": "按 user/session/thread 隔离状态与持久化",
+        "C": "共享一个全局可变 history"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Session isolation"
+    },
+    {
+      "id": "AI-088",
+      "domain": "AI",
+      "category": "Agent",
+      "difficulty": 3,
+      "question": "HITL 最适合放在哪类步骤？",
+      "options": {
+        "A": "高风险、不可逆或模型置信不足的关键操作",
+        "B": "每生成一个 token 都审批",
+        "C": "只用于模型训练"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "HITL"
+    },
+    {
+      "id": "AI-089",
+      "domain": "AI",
+      "category": "Agent",
+      "difficulty": 3,
+      "question": "单 Agent 与多 Agent 的合理选型原则是什么？",
+      "options": {
+        "A": "任何系统都至少需要 10 个 Agent",
+        "B": "多 Agent 一定更准确",
+        "C": "只有确实需要专业分工、上下文隔离或并行时才引入多 Agent"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Single vs Multi Agent"
+    },
+    {
+      "id": "AI-090",
+      "domain": "AI",
+      "category": "Multi-Agent",
+      "difficulty": 4,
+      "question": "Supervisor 架构中 Supervisor 的主要职责是什么？",
+      "options": {
+        "A": "替代全部业务数据库",
+        "B": "路由任务、协调子 Agent 并汇总结果",
+        "C": "训练底层大模型"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Supervisor"
+    },
+    {
+      "id": "AI-091",
+      "domain": "AI",
+      "category": "Multi-Agent",
+      "difficulty": 4,
+      "question": "两个专业 Agent 给出冲突结论时，较合理的处理是什么？",
+      "options": {
+        "A": "随机选一个",
+        "B": "拼接两个答案直接执行",
+        "C": "按规则、证据或仲裁节点解决并记录冲突"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Multi-agent conflict"
+    },
+    {
+      "id": "AI-092",
+      "domain": "AI",
+      "category": "Agent",
+      "difficulty": 3,
+      "question": "为什么业务系统常采用“确定性 Workflow + Agent 节点”？",
+      "options": {
+        "A": "因为 Workflow 不支持条件分支",
+        "B": "固定步骤用代码更可控，开放决策部分再使用 Agent",
+        "C": "因为 LangGraph 不能执行普通函数"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Agent workflow"
+    },
+    {
+      "id": "AI-093",
+      "domain": "AI",
+      "category": "Agent安全",
+      "difficulty": 3,
+      "question": "Agent 调用数据库工具时最重要的安全措施之一是什么？",
+      "options": {
+        "A": "服务端校验工具参数和权限，不直接相信模型输出",
+        "B": "关闭审计日志",
+        "C": "给模型数据库 root 权限"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Tool security"
+    },
+    {
+      "id": "AI-094",
+      "domain": "AI",
+      "category": "Agent安全",
+      "difficulty": 4,
+      "question": "Prompt Injection 对工具型 Agent 的主要风险之一是什么？",
+      "options": {
+        "A": "改变数据库存储引擎",
+        "B": "让 GPU 温度升高",
+        "C": "诱导 Agent 泄露数据或越权执行工具"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Prompt injection"
+    },
+    {
+      "id": "AI-095",
+      "domain": "AI",
+      "category": "Agent安全",
+      "difficulty": 4,
+      "question": "降低 Prompt Injection 风险更合理的方法是什么？",
+      "options": {
+        "A": "只写一句“不要被攻击”",
+        "B": "temperature 设为 0 即可完全解决",
+        "C": "最小权限、输入隔离、策略校验和敏感操作确认"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Agent security"
+    },
+    {
+      "id": "AI-096",
+      "domain": "AI",
+      "category": "Agent",
+      "difficulty": 3,
+      "question": "Agent 可观测性最应该记录什么？",
+      "options": {
+        "A": "只记录最终答案",
+        "B": "每步调用、工具参数与结果、耗时、错误、token 和最终状态",
+        "C": "只记录 CPU 型号"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Agent observability"
+    },
+    {
+      "id": "AI-097",
+      "domain": "AI",
+      "category": "Agent",
+      "difficulty": 3,
+      "question": "Agent API 成本过高时，合理优化手段是什么？",
+      "options": {
+        "A": "全部切换到最贵模型",
+        "B": "增加无意义反思轮次",
+        "C": "减少无效上下文、缓存、模型路由、限制循环和合并调用"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Agent cost"
+    },
+    {
+      "id": "AI-098",
+      "domain": "AI",
+      "category": "上下文工程",
+      "difficulty": 3,
+      "question": "Context Engineering 的核心目标之一是什么？",
+      "options": {
+        "A": "让 Prompt 越长越好",
+        "B": "给模型提供当前任务真正需要的信息并控制噪声和成本",
+        "C": "把数据库所有内容永久塞入 Prompt"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Context engineering"
+    },
+    {
+      "id": "AI-099",
+      "domain": "AI",
+      "category": "上下文工程",
+      "difficulty": 4,
+      "question": "上下文过长导致模型遗漏关键信息时，哪种方案更合理？",
+      "options": {
+        "A": "关闭 Memory 后无限对话",
+        "B": "分层上下文、摘要压缩、按需检索和重要信息置顶",
+        "C": "把历史重复三遍"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Long context"
+    },
+    {
+      "id": "AI-100",
+      "domain": "AI",
+      "category": "Agent评测",
+      "difficulty": 4,
+      "question": "判断 Agent 是否比简单 Workflow 更值得使用，最应该比较什么？",
+      "options": {
+        "A": "任务成功率、成本、延迟、失败类型和人工介入",
+        "B": "Agent 名字是否炫酷",
+        "C": "代码文件数量"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Agent evaluation"
+    },
+    {
+      "id": "AI-101",
+      "domain": "AI",
+      "category": "Agent",
+      "difficulty": 3,
+      "question": "指数退避重试的主要意义是什么？",
+      "options": {
+        "A": "让重试越来越频繁",
+        "B": "保证所有请求第一次就成功",
+        "C": "避免失败服务被高频重试进一步压垮"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Exponential backoff"
+    },
+    {
+      "id": "AI-102",
+      "domain": "AI",
+      "category": "Agent",
+      "difficulty": 4,
+      "question": "工具调用幂等性为什么重要？",
+      "options": {
+        "A": "能让 Prompt 更短",
+        "B": "能提高模型参数量",
+        "C": "重试时可避免重复扣款、重复创建等副作用"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Tool idempotency"
+    },
+    {
+      "id": "AI-103",
+      "domain": "AI",
+      "category": "Agent",
+      "difficulty": 3,
+      "question": "Agent 的停止条件除了最大步数，还应包含什么？",
+      "options": {
+        "A": "只看 GPU 温度",
+        "B": "任务完成、不可恢复错误或人工终止等明确条件",
+        "C": "只看输出长度"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Stop condition"
+    },
+    {
+      "id": "AI-104",
+      "domain": "AI",
+      "category": "Agent",
+      "difficulty": 4,
+      "question": "Sandbox 在 Coding/Computer-use Agent 中主要解决什么？",
+      "options": {
+        "A": "替代数据库事务",
+        "B": "提高模型预训练速度",
+        "C": "限制代码或系统操作的权限与影响范围"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Sandbox"
+    },
+    {
+      "id": "AI-105",
+      "domain": "AI",
+      "category": "Agent",
+      "difficulty": 4,
+      "question": "Replay 能给 Agent 调试带来什么价值？",
+      "options": {
+        "A": "减少所有网络流量",
+        "B": "重放历史轨迹，复现失败并比较改动前后行为",
+        "C": "直接修改模型权重"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Trace replay"
+    },
+    {
+      "id": "AI-106",
+      "domain": "AI",
+      "category": "评测",
+      "difficulty": 2,
+      "question": "Precision 的定义最接近哪项？",
+      "options": {
+        "A": "所有真实正样本中被找出的比例",
+        "B": "所有样本中预测错误的比例",
+        "C": "预测为正的样本中真正为正的比例"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Precision"
+    },
+    {
+      "id": "AI-107",
+      "domain": "AI",
+      "category": "评测",
+      "difficulty": 2,
+      "question": "Recall 的定义最接近哪项？",
+      "options": {
+        "A": "所有真实正样本中被正确识别出的比例",
+        "B": "负样本占全部样本比例",
+        "C": "预测为正样本中真正为正的比例"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Recall"
+    },
+    {
+      "id": "AI-108",
+      "domain": "AI",
+      "category": "评测",
+      "difficulty": 2,
+      "question": "F1 Score 是什么？",
+      "options": {
+        "A": "TP 与 TN 的乘积",
+        "B": "Precision 与 Recall 的调和平均",
+        "C": "Accuracy 与 Loss 的算术平均"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "F1"
+    },
+    {
+      "id": "AI-109",
+      "domain": "AI",
+      "category": "评测",
+      "difficulty": 3,
+      "question": "二分类 AUC 可以直观理解为什么？",
+      "options": {
+        "A": "预测正确样本总数",
+        "B": "随机抽一个正样本和一个负样本，模型把正样本排得更高的概率",
+        "C": "训练所需 GPU 数量"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "AUC"
+    },
+    {
+      "id": "AI-110",
+      "domain": "AI",
+      "category": "评测",
+      "difficulty": 3,
+      "question": "LLM-as-a-Judge 的主要风险之一是什么？",
+      "options": {
+        "A": "评判模型也可能有偏差和不稳定，需要校准与人工抽检",
+        "B": "不需要任何 Prompt",
+        "C": "只能评估分类模型"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "LLM-as-a-Judge"
+    },
+    {
+      "id": "AI-111",
+      "domain": "AI",
+      "category": "评测",
+      "difficulty": 3,
+      "question": "Golden Set 的核心价值是什么？",
+      "options": {
+        "A": "提供稳定、可重复的基准样本用于回归比较",
+        "B": "替代生产监控",
+        "C": "自动增加训练数据"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Golden set"
+    },
+    {
+      "id": "AI-112",
+      "domain": "AI",
+      "category": "评测",
+      "difficulty": 3,
+      "question": "线上修改 Prompt 前最应该做什么？",
+      "options": {
+        "A": "清空历史 trace",
+        "B": "直接覆盖生产",
+        "C": "在固定评测集上做回归比较"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Prompt regression"
+    },
+    {
+      "id": "AI-113",
+      "domain": "AI",
+      "category": "评测",
+      "difficulty": 3,
+      "question": "结构化输出成功率衡量什么？",
+      "options": {
+        "A": "输出满足预期 schema 并可被程序解析的比例",
+        "B": "回答长度达标比例",
+        "C": "GPU 请求数量"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Structured output"
+    },
+    {
+      "id": "AI-114",
+      "domain": "AI",
+      "category": "评测",
+      "difficulty": 3,
+      "question": "Tool-call success rate 更合理的定义是什么？",
+      "options": {
+        "A": "工具调用在参数校验、执行和返回结果上成功完成的比例",
+        "B": "工具函数代码行数",
+        "C": "模型决定不调用工具的比例"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Tool success"
+    },
+    {
+      "id": "AI-115",
+      "domain": "AI",
+      "category": "评测",
+      "difficulty": 3,
+      "question": "Fallback rate 很高通常意味着什么？",
+      "options": {
+        "A": "主路径经常失败或置信不足，需要排查模型、Prompt、工具或数据",
+        "B": "缓存命中率一定高",
+        "C": "系统一定很好"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Fallback rate"
+    },
+    {
+      "id": "AI-116",
+      "domain": "AI",
+      "category": "微调",
+      "difficulty": 2,
+      "question": "SFT 的核心训练信号是什么？",
+      "options": {
+        "A": "输入与目标输出组成的监督样本",
+        "B": "只有环境奖励没有目标答案",
+        "C": "随机探索"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "SFT"
+    },
+    {
+      "id": "AI-117",
+      "domain": "AI",
+      "category": "微调",
+      "difficulty": 2,
+      "question": "LoRA 的核心特点是什么？",
+      "options": {
+        "A": "冻结大部分原参数，只训练低秩增量矩阵",
+        "B": "必须更新全部参数",
+        "C": "不需要反向传播"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "LoRA"
+    },
+    {
+      "id": "AI-118",
+      "domain": "AI",
+      "category": "微调",
+      "difficulty": 3,
+      "question": "经典 LoRA 常见初始化方式是什么？",
+      "options": {
+        "A": "两个矩阵都为全 1",
+        "B": "一个低秩矩阵随机初始化，另一个初始化为零",
+        "C": "直接复制完整权重"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "LoRA init"
+    },
+    {
+      "id": "AI-119",
+      "domain": "AI",
+      "category": "微调",
+      "difficulty": 3,
+      "question": "QLoRA 的典型做法是什么？",
+      "options": {
+        "A": "只训练 tokenizer",
+        "B": "只量化训练数据",
+        "C": "量化基础模型，同时训练 LoRA 适配器"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "QLoRA"
+    },
+    {
+      "id": "AI-120",
+      "domain": "AI",
+      "category": "对齐",
+      "difficulty": 3,
+      "question": "经典 RLHF 的常见流程是什么？",
+      "options": {
+        "A": "SFT → 偏好/奖励建模 → 强化学习优化策略",
+        "B": "Embedding → BM25 → Rerank",
+        "C": "Tokenizer → Docker → K8s"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "RLHF"
+    },
+    {
+      "id": "AI-121",
+      "domain": "AI",
+      "category": "对齐",
+      "difficulty": 3,
+      "question": "奖励模型常使用成对偏好数据的原因之一是什么？",
+      "options": {
+        "A": "只能用于图像任务",
+        "B": "成对数据完全不需要人工",
+        "C": "人类通常更容易判断两个回答哪个更好，而不是给绝对分数"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Reward model"
+    },
+    {
+      "id": "AI-122",
+      "domain": "AI",
+      "category": "对齐",
+      "difficulty": 4,
+      "question": "DPO 相比经典 PPO-RLHF 的典型特点是什么？",
+      "options": {
+        "A": "只能用于分类器",
+        "B": "直接利用偏好对优化策略，通常不需单独奖励模型再做在线 PPO",
+        "C": "完全不使用偏好数据"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "DPO"
+    },
+    {
+      "id": "AI-123",
+      "domain": "AI",
+      "category": "对齐",
+      "difficulty": 4,
+      "question": "PPO 中 clipping 的主要目的是什么？",
+      "options": {
+        "A": "让输出永远相同",
+        "B": "把奖励全部裁剪为零",
+        "C": "限制策略一次更新偏离旧策略过远，提高稳定性"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "PPO"
+    },
+    {
+      "id": "AI-124",
+      "domain": "AI",
+      "category": "对齐",
+      "difficulty": 5,
+      "question": "GRPO 的一个典型特点是什么？",
+      "options": {
+        "A": "只能用于监督微调",
+        "B": "利用同一问题的一组采样构造相对优势，常可省去独立 value/critic",
+        "C": "完全不需要奖励函数"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "GRPO"
+    },
+    {
+      "id": "AI-125",
+      "domain": "AI",
+      "category": "微调",
+      "difficulty": 3,
+      "question": "什么时候更适合优先用 RAG 而不是微调来注入业务知识？",
+      "options": {
+        "A": "知识经常变化、需要可追溯引用且希望低成本更新时",
+        "B": "希望模型学习固定输出格式时",
+        "C": "需要永久改变模型写作风格时"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "RAG vs fine-tune"
+    },
+    {
+      "id": "FULLSTACK-001",
+      "domain": "FULLSTACK",
+      "category": "Python",
+      "difficulty": 1,
+      "question": "Python 中 list 和 tuple 的主要区别之一是什么？",
+      "options": {
+        "A": "二者完全相同",
+        "B": "list 可变，tuple 通常不可变",
+        "C": "tuple 可变而 list 不可变"
+      },
+      "answer": "B",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Python basics"
+    },
+    {
+      "id": "FULLSTACK-002",
+      "domain": "FULLSTACK",
+      "category": "Python",
+      "difficulty": 2,
+      "question": "Python 字典平均情况下查找键的时间复杂度通常是多少？",
+      "options": {
+        "A": "O(n²)",
+        "B": "O(1)",
+        "C": "O(n)"
+      },
+      "answer": "B",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Python dict"
+    },
+    {
+      "id": "FULLSTACK-003",
+      "domain": "FULLSTACK",
+      "category": "Python",
+      "difficulty": 2,
+      "question": "生成器相比一次性返回完整 list 的主要优势是什么？",
+      "options": {
+        "A": "不需要任何函数调用",
+        "B": "一定执行得更快",
+        "C": "可惰性生成数据，降低峰值内存占用"
+      },
+      "answer": "C",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Generator"
+    },
+    {
+      "id": "FULLSTACK-004",
+      "domain": "FULLSTACK",
+      "category": "Python",
+      "difficulty": 2,
+      "question": "`async def` 更适合哪类任务？",
+      "options": {
+        "A": "只适用于读取本地常量",
+        "B": "纯 CPU 密集矩阵计算且无 await",
+        "C": "大量等待网络、数据库等 I/O 的任务"
+      },
+      "answer": "C",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Asyncio"
+    },
+    {
+      "id": "FULLSTACK-005",
+      "domain": "FULLSTACK",
+      "category": "Python",
+      "difficulty": 3,
+      "question": "Python asyncio 中 `await` 的核心作用是什么？",
+      "options": {
+        "A": "在等待可等待对象时让出控制权给事件循环",
+        "B": "创建新的操作系统进程",
+        "C": "永久阻塞整个线程"
+      },
+      "answer": "A",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Asyncio"
+    },
+    {
+      "id": "FULLSTACK-006",
+      "domain": "FULLSTACK",
+      "category": "Python",
+      "difficulty": 3,
+      "question": "CPU 密集型 Python 任务要利用多核，通常更适合什么方式？",
+      "options": {
+        "A": "只增加 asyncio task",
+        "B": "多进程或把计算交给释放 GIL 的原生库",
+        "C": "不停增加线程一定线性加速"
+      },
+      "answer": "B",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "GIL"
+    },
+    {
+      "id": "FULLSTACK-007",
+      "domain": "FULLSTACK",
+      "category": "Python",
+      "difficulty": 2,
+      "question": "Context Manager 最常见的用途是什么？",
+      "options": {
+        "A": "提高模型准确率",
+        "B": "确保资源按作用域正确获取和释放",
+        "C": "替代数据库索引"
+      },
+      "answer": "B",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Context manager"
+    },
+    {
+      "id": "FULLSTACK-008",
+      "domain": "FULLSTACK",
+      "category": "Python",
+      "difficulty": 2,
+      "question": "装饰器最典型的作用是什么？",
+      "options": {
+        "A": "在不修改核心函数代码的情况下包装并扩展行为",
+        "B": "让函数无法被调用",
+        "C": "把函数转换成数据库表"
+      },
+      "answer": "A",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Decorator"
+    },
+    {
+      "id": "FULLSTACK-009",
+      "domain": "FULLSTACK",
+      "category": "Python",
+      "difficulty": 3,
+      "question": "Pydantic 在 FastAPI/AI 应用中常用于什么？",
+      "options": {
+        "A": "GPU 显存分配",
+        "B": "前端 DOM 渲染",
+        "C": "数据校验、解析和结构化模型定义"
+      },
+      "answer": "C",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Pydantic"
+    },
+    {
+      "id": "FULLSTACK-010",
+      "domain": "FULLSTACK",
+      "category": "Python",
+      "difficulty": 2,
+      "question": "Python 异常处理中 `finally` 的典型作用是什么？",
+      "options": {
+        "A": "无论是否发生异常都执行清理逻辑",
+        "B": "只在没有异常时执行",
+        "C": "只捕获 SyntaxError"
+      },
+      "answer": "A",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Exceptions"
+    },
+    {
+      "id": "FULLSTACK-011",
+      "domain": "FULLSTACK",
+      "category": "Python",
+      "difficulty": 3,
+      "question": "在并发程序中共享可变全局变量最容易引发什么问题？",
+      "options": {
+        "A": "自动实现事务",
+        "B": "自动提升性能",
+        "C": "竞态条件和状态污染"
+      },
+      "answer": "C",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Concurrency"
+    },
+    {
+      "id": "FULLSTACK-012",
+      "domain": "FULLSTACK",
+      "category": "Python",
+      "difficulty": 2,
+      "question": "类型提示（type hints）的主要价值是什么？",
+      "options": {
+        "A": "提高可读性并辅助静态检查与 IDE 提示",
+        "B": "让 Python 变成纯静态语言",
+        "C": "强制运行时永不出错"
+      },
+      "answer": "A",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Type hints"
+    },
+    {
+      "id": "FULLSTACK-013",
+      "domain": "FULLSTACK",
+      "category": "Python",
+      "difficulty": 3,
+      "question": "`dataclass` 最适合哪类场景？",
+      "options": {
+        "A": "以数据字段为主、需要减少样板代码的简单对象",
+        "B": "执行 GPU 推理",
+        "C": "替代所有 ORM"
+      },
+      "answer": "A",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Dataclass"
+    },
+    {
+      "id": "FULLSTACK-014",
+      "domain": "FULLSTACK",
+      "category": "Python",
+      "difficulty": 3,
+      "question": "使用线程池调用阻塞 I/O 的主要目的是什么？",
+      "options": {
+        "A": "让 CPU 密集任务必然线性加速",
+        "B": "避免阻塞 asyncio 事件循环",
+        "C": "绕过所有网络限制"
+      },
+      "answer": "B",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Thread pool"
+    },
+    {
+      "id": "FULLSTACK-015",
+      "domain": "FULLSTACK",
+      "category": "Python",
+      "difficulty": 3,
+      "question": "大型 Python 服务中循环导入常见的根因是什么？",
+      "options": {
+        "A": "模块职责边界和依赖方向设计不清",
+        "B": "Python 不允许任何模块互相引用",
+        "C": "数据库连接数太少"
+      },
+      "answer": "A",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Module design"
+    },
+    {
+      "id": "FULLSTACK-016",
+      "domain": "FULLSTACK",
+      "category": "FastAPI",
+      "difficulty": 1,
+      "question": "FastAPI 中依赖注入通常通过什么机制使用？",
+      "options": {
+        "A": "`Depends`",
+        "B": "`yield from` only",
+        "C": "`dataclass` only"
+      },
+      "answer": "A",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "FastAPI DI"
+    },
+    {
+      "id": "FULLSTACK-017",
+      "domain": "FULLSTACK",
+      "category": "FastAPI",
+      "difficulty": 2,
+      "question": "FastAPI 的请求体数据校验主要依赖什么？",
+      "options": {
+        "A": "Redis",
+        "B": "Pydantic 模型",
+        "C": "Nginx"
+      },
+      "answer": "B",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "FastAPI validation"
+    },
+    {
+      "id": "FULLSTACK-018",
+      "domain": "FULLSTACK",
+      "category": "API",
+      "difficulty": 2,
+      "question": "HTTP 400 更常表示什么？",
+      "options": {
+        "A": "服务端内部异常",
+        "B": "客户端请求格式或参数存在问题",
+        "C": "请求成功但无内容"
+      },
+      "answer": "B",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "HTTP status"
+    },
+    {
+      "id": "FULLSTACK-019",
+      "domain": "FULLSTACK",
+      "category": "API",
+      "difficulty": 2,
+      "question": "HTTP 401 与 403 的区别更准确的是哪项？",
+      "options": {
+        "A": "二者完全等价",
+        "B": "401 通常表示未认证，403 表示已识别但无权限",
+        "C": "401 表示服务器宕机，403 表示数据库超时"
+      },
+      "answer": "B",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "HTTP auth"
+    },
+    {
+      "id": "FULLSTACK-020",
+      "domain": "FULLSTACK",
+      "category": "API",
+      "difficulty": 2,
+      "question": "REST API 中 PUT 与 PATCH 的常见区别是什么？",
+      "options": {
+        "A": "PUT 常表示整体替换，PATCH 常表示部分更新",
+        "B": "PATCH 只能用于删除",
+        "C": "PUT 只能用于查询"
+      },
+      "answer": "A",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "REST"
+    },
+    {
+      "id": "FULLSTACK-021",
+      "domain": "FULLSTACK",
+      "category": "FastAPI",
+      "difficulty": 3,
+      "question": "FastAPI 中流式返回 LLM 输出常用什么方式？",
+      "options": {
+        "A": "只能写入数据库后轮询",
+        "B": "只允许一次返回完整 JSON",
+        "C": "StreamingResponse 或 SSE/WebSocket 相关实现"
+      },
+      "answer": "C",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Streaming"
+    },
+    {
+      "id": "FULLSTACK-022",
+      "domain": "FULLSTACK",
+      "category": "API",
+      "difficulty": 3,
+      "question": "SSE 相比 WebSocket 更适合哪种场景？",
+      "options": {
+        "A": "服务器向浏览器单向持续推送事件",
+        "B": "文件系统挂载",
+        "C": "需要低延迟双向游戏通信"
+      },
+      "answer": "A",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "SSE"
+    },
+    {
+      "id": "FULLSTACK-023",
+      "domain": "FULLSTACK",
+      "category": "API",
+      "difficulty": 3,
+      "question": "API 幂等性最主要解决什么问题？",
+      "options": {
+        "A": "每次请求必须返回不同结果",
+        "B": "让所有接口变成 GET",
+        "C": "重复请求不会重复产生副作用"
+      },
+      "answer": "C",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Idempotency"
+    },
+    {
+      "id": "FULLSTACK-024",
+      "domain": "FULLSTACK",
+      "category": "FastAPI",
+      "difficulty": 3,
+      "question": "异步接口内部直接调用耗时阻塞函数会有什么问题？",
+      "options": {
+        "A": "自动启动新进程",
+        "B": "一定提升吞吐",
+        "C": "可能阻塞事件循环，拖慢其他请求"
+      },
+      "answer": "C",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Async API"
+    },
+    {
+      "id": "FULLSTACK-025",
+      "domain": "FULLSTACK",
+      "category": "API",
+      "difficulty": 3,
+      "question": "分页接口在大数据量场景中相比超大 offset，更常推荐什么？",
+      "options": {
+        "A": "基于稳定排序键的 cursor/keyset pagination",
+        "B": "一次返回全部数据",
+        "C": "把 page size 设为无限大"
+      },
+      "answer": "A",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Pagination"
+    },
+    {
+      "id": "FULLSTACK-026",
+      "domain": "FULLSTACK",
+      "category": "API",
+      "difficulty": 3,
+      "question": "API 版本管理的主要目的是什么？",
+      "options": {
+        "A": "提高 GPU 利用率",
+        "B": "代替数据库迁移",
+        "C": "在接口演进时降低对旧客户端的破坏"
+      },
+      "answer": "C",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "API versioning"
+    },
+    {
+      "id": "FULLSTACK-027",
+      "domain": "FULLSTACK",
+      "category": "API",
+      "difficulty": 3,
+      "question": "统一错误码和错误响应结构的主要价值是什么？",
+      "options": {
+        "A": "让 HTTP 状态码失效",
+        "B": "让所有错误都返回 200",
+        "C": "便于客户端处理和服务端排障"
+      },
+      "answer": "C",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Error handling"
+    },
+    {
+      "id": "FULLSTACK-028",
+      "domain": "FULLSTACK",
+      "category": "FastAPI",
+      "difficulty": 3,
+      "question": "上传大文件时更合理的处理方式是什么？",
+      "options": {
+        "A": "全部读入字符串后再处理",
+        "B": "把文件编码成 URL 参数",
+        "C": "使用流式/临时文件处理，避免一次性把全部内容加载进内存"
+      },
+      "answer": "C",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "File upload"
+    },
+    {
+      "id": "FULLSTACK-029",
+      "domain": "FULLSTACK",
+      "category": "API",
+      "difficulty": 3,
+      "question": "CORS 主要解决什么问题？",
+      "options": {
+        "A": "浏览器跨源请求的访问控制",
+        "B": "数据库跨表查询",
+        "C": "容器跨主机调度"
+      },
+      "answer": "A",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "CORS"
+    },
+    {
+      "id": "FULLSTACK-030",
+      "domain": "FULLSTACK",
+      "category": "API",
+      "difficulty": 4,
+      "question": "限流通常最适合在哪一层实施？",
+      "options": {
+        "A": "只在前端按钮上",
+        "B": "网关或服务入口，并结合用户/API Key 等维度",
+        "C": "完全交给 LLM 自己判断"
+      },
+      "answer": "B",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Rate limiting"
+    },
+    {
+      "id": "FULLSTACK-031",
+      "domain": "FULLSTACK",
+      "category": "Database",
+      "difficulty": 1,
+      "question": "数据库索引的主要作用是什么？",
+      "options": {
+        "A": "减少查询需要扫描的数据量，提高特定查询速度",
+        "B": "自动修复业务逻辑错误",
+        "C": "保证所有查询都 O(1)"
+      },
+      "answer": "A",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Database index"
+    },
+    {
+      "id": "FULLSTACK-032",
+      "domain": "FULLSTACK",
+      "category": "Database",
+      "difficulty": 2,
+      "question": "B-Tree 索引最适合哪类查询？",
+      "options": {
+        "A": "高维向量近邻搜索",
+        "B": "全文语义生成",
+        "C": "等值、范围和排序等常见查询"
+      },
+      "answer": "C",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "B-Tree"
+    },
+    {
+      "id": "FULLSTACK-033",
+      "domain": "FULLSTACK",
+      "category": "Database",
+      "difficulty": 3,
+      "question": "SQL 查询出现 Seq Scan 是否一定有问题？",
+      "options": {
+        "A": "只要有 Seq Scan 就必须建十个索引",
+        "B": "不一定，小表或低选择性条件下顺序扫描可能更划算",
+        "C": "一定有严重问题"
+      },
+      "answer": "B",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "EXPLAIN"
+    },
+    {
+      "id": "FULLSTACK-034",
+      "domain": "FULLSTACK",
+      "category": "Database",
+      "difficulty": 3,
+      "question": "EXPLAIN ANALYZE 相比 EXPLAIN 额外提供什么？",
+      "options": {
+        "A": "自动修改索引",
+        "B": "只显示 SQL 文本",
+        "C": "实际执行统计信息"
+      },
+      "answer": "C",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "EXPLAIN ANALYZE"
+    },
+    {
+      "id": "FULLSTACK-035",
+      "domain": "FULLSTACK",
+      "category": "Database",
+      "difficulty": 3,
+      "question": "数据库事务的 ACID 中 Atomicity 表示什么？",
+      "options": {
+        "A": "事务中的操作要么整体成功，要么整体回滚",
+        "B": "所有表必须有同样字段",
+        "C": "事务必须异步执行"
+      },
+      "answer": "A",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "ACID"
+    },
+    {
+      "id": "FULLSTACK-036",
+      "domain": "FULLSTACK",
+      "category": "Database",
+      "difficulty": 3,
+      "question": "乐观锁常通过什么方式检测并发冲突？",
+      "options": {
+        "A": "永久锁住整张表",
+        "B": "关闭事务",
+        "C": "版本号或更新时间字段"
+      },
+      "answer": "C",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Optimistic locking"
+    },
+    {
+      "id": "FULLSTACK-037",
+      "domain": "FULLSTACK",
+      "category": "Database",
+      "difficulty": 3,
+      "question": "N+1 查询问题指什么？",
+      "options": {
+        "A": "查询必须包含 N+1 个字段",
+        "B": "数据库只能执行 N 条 SQL",
+        "C": "先查一批主记录，再为每条记录额外发查询造成大量 SQL"
+      },
+      "answer": "C",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "N+1"
+    },
+    {
+      "id": "FULLSTACK-038",
+      "domain": "FULLSTACK",
+      "category": "PostgreSQL",
+      "difficulty": 3,
+      "question": "PostgreSQL 中 JSONB 相比纯文本 JSON 的典型优势是什么？",
+      "options": {
+        "A": "不能更新字段",
+        "B": "可建立索引并支持更丰富的结构化查询",
+        "C": "只能保存数字"
+      },
+      "answer": "B",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "JSONB"
+    },
+    {
+      "id": "FULLSTACK-039",
+      "domain": "FULLSTACK",
+      "category": "PostgreSQL",
+      "difficulty": 3,
+      "question": "pgvector 主要用于什么？",
+      "options": {
+        "A": "替代 SQLAlchemy",
+        "B": "在 PostgreSQL 中存储并检索向量",
+        "C": "保存 Docker 镜像"
+      },
+      "answer": "B",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "pgvector"
+    },
+    {
+      "id": "FULLSTACK-040",
+      "domain": "FULLSTACK",
+      "category": "Database",
+      "difficulty": 4,
+      "question": "高并发写入下无边界长事务的主要风险是什么？",
+      "options": {
+        "A": "自动提高缓存命中率",
+        "B": "锁持有时间长、版本膨胀和资源占用增加",
+        "C": "查询一定变快"
+      },
+      "answer": "B",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Transactions"
+    },
+    {
+      "id": "FULLSTACK-041",
+      "domain": "FULLSTACK",
+      "category": "Cache",
+      "difficulty": 2,
+      "question": "缓存最适合保存哪类数据？",
+      "options": {
+        "A": "用户密码明文",
+        "B": "必须绝对实时且不能过期的数据的唯一副本",
+        "C": "读取频繁且允许一定失效策略的数据"
+      },
+      "answer": "C",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Caching"
+    },
+    {
+      "id": "FULLSTACK-042",
+      "domain": "FULLSTACK",
+      "category": "Cache",
+      "difficulty": 3,
+      "question": "Cache Aside 模式的典型读取流程是什么？",
+      "options": {
+        "A": "永远只读缓存",
+        "B": "先查缓存，未命中再查数据库并回填缓存",
+        "C": "每次先删除数据库"
+      },
+      "answer": "B",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Cache aside"
+    },
+    {
+      "id": "FULLSTACK-043",
+      "domain": "FULLSTACK",
+      "category": "Cache",
+      "difficulty": 3,
+      "question": "缓存穿透常指什么？",
+      "options": {
+        "A": "缓存命中率 100%",
+        "B": "大量请求查询不存在的数据，导致每次都落到数据库",
+        "C": "缓存服务器内存太大"
+      },
+      "answer": "B",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Cache penetration"
+    },
+    {
+      "id": "FULLSTACK-044",
+      "domain": "FULLSTACK",
+      "category": "Cache",
+      "difficulty": 3,
+      "question": "缓存雪崩常指什么？",
+      "options": {
+        "A": "一个请求查询两个缓存",
+        "B": "大量缓存同时过期或缓存整体不可用，流量集中打到后端",
+        "C": "单个 key 太大"
+      },
+      "answer": "B",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Cache avalanche"
+    },
+    {
+      "id": "FULLSTACK-045",
+      "domain": "FULLSTACK",
+      "category": "Redis",
+      "difficulty": 3,
+      "question": "Redis 分布式锁至少应关注什么？",
+      "options": {
+        "A": "所有客户端使用相同随机值",
+        "B": "锁永不过期",
+        "C": "过期时间、唯一 owner 标识和安全释放"
+      },
+      "answer": "C",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Distributed lock"
+    },
+    {
+      "id": "FULLSTACK-046",
+      "domain": "FULLSTACK",
+      "category": "Concurrency",
+      "difficulty": 3,
+      "question": "生产者-消费者模型常用来解决什么？",
+      "options": {
+        "A": "让所有任务同步串行",
+        "B": "替代数据库事务",
+        "C": "通过队列解耦任务提交和处理速度"
+      },
+      "answer": "C",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Queue"
+    },
+    {
+      "id": "FULLSTACK-047",
+      "domain": "FULLSTACK",
+      "category": "Concurrency",
+      "difficulty": 3,
+      "question": "任务队列中为什么需要幂等消费者？",
+      "options": {
+        "A": "消息永远只会投递一次",
+        "B": "消息可能重复投递，幂等可避免重复副作用",
+        "C": "可以让消息体更长"
+      },
+      "answer": "B",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Idempotent consumer"
+    },
+    {
+      "id": "FULLSTACK-048",
+      "domain": "FULLSTACK",
+      "category": "Concurrency",
+      "difficulty": 3,
+      "question": "指数退避重试主要用于什么？",
+      "options": {
+        "A": "在依赖暂时失败时降低重试压力",
+        "B": "让所有失败永不记录",
+        "C": "让请求越来越频繁"
+      },
+      "answer": "A",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Retry"
+    },
+    {
+      "id": "FULLSTACK-049",
+      "domain": "FULLSTACK",
+      "category": "Concurrency",
+      "difficulty": 4,
+      "question": "发生“惊群”时更合理的缓解办法是什么？",
+      "options": {
+        "A": "删除缓存",
+        "B": "让所有实例同时重试",
+        "C": "加随机抖动、锁/单航班机制或请求合并"
+      },
+      "answer": "C",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Thundering herd"
+    },
+    {
+      "id": "FULLSTACK-050",
+      "domain": "FULLSTACK",
+      "category": "Cache",
+      "difficulty": 3,
+      "question": "缓存失效策略设计时最需要平衡什么？",
+      "options": {
+        "A": "模型参数量和 GPU 数量",
+        "B": "一致性、新鲜度、命中率与成本",
+        "C": "字体、颜色和日志格式"
+      },
+      "answer": "B",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Cache invalidation"
+    },
+    {
+      "id": "FULLSTACK-051",
+      "domain": "FULLSTACK",
+      "category": "Docker",
+      "difficulty": 2,
+      "question": "Docker 容器相比虚拟机通常更轻量的主要原因是什么？",
+      "options": {
+        "A": "容器不需要文件系统",
+        "B": "容器不需要任何操作系统概念",
+        "C": "容器共享宿主机内核"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Docker"
+    },
+    {
+      "id": "FULLSTACK-052",
+      "domain": "FULLSTACK",
+      "category": "Docker",
+      "difficulty": 2,
+      "question": "Dockerfile 中多阶段构建的主要价值是什么？",
+      "options": {
+        "A": "让容器同时运行多个内核",
+        "B": "自动扩容 Pod",
+        "C": "减少最终镜像体积并隔离构建依赖"
+      },
+      "answer": "C",
+      "source_origin": "AgentGuide",
+      "source_topic": "Multi-stage build"
+    },
+    {
+      "id": "FULLSTACK-053",
+      "domain": "FULLSTACK",
+      "category": "Docker",
+      "difficulty": 2,
+      "question": "容器镜像为什么应尽量固定依赖版本？",
+      "options": {
+        "A": "提高数据库事务隔离级别",
+        "B": "提高构建可重复性，减少不可预期升级",
+        "C": "让镜像文件名更短"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Reproducible build"
+    },
+    {
+      "id": "FULLSTACK-054",
+      "domain": "FULLSTACK",
+      "category": "Docker",
+      "difficulty": 3,
+      "question": "容器内应用日志更推荐输出到哪里？",
+      "options": {
+        "A": "直接写进代码仓库",
+        "B": "stdout/stderr，再由平台统一采集",
+        "C": "只写容器本地临时文件且不采集"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Container logging"
+    },
+    {
+      "id": "FULLSTACK-055",
+      "domain": "FULLSTACK",
+      "category": "Kubernetes",
+      "difficulty": 2,
+      "question": "Deployment 最常用于什么？",
+      "options": {
+        "A": "管理无状态 Pod 副本和滚动更新",
+        "B": "永久保存数据库表",
+        "C": "替代 Docker 镜像"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "K8s Deployment"
+    },
+    {
+      "id": "FULLSTACK-056",
+      "domain": "FULLSTACK",
+      "category": "Kubernetes",
+      "difficulty": 2,
+      "question": "Service 主要解决什么问题？",
+      "options": {
+        "A": "为一组动态变化的 Pod 提供稳定网络访问入口",
+        "B": "执行数据库迁移",
+        "C": "保存模型权重"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "K8s Service"
+    },
+    {
+      "id": "FULLSTACK-057",
+      "domain": "FULLSTACK",
+      "category": "Kubernetes",
+      "difficulty": 3,
+      "question": "Readiness Probe 失败通常意味着什么？",
+      "options": {
+        "A": "该 Pod 暂时不应接收业务流量",
+        "B": "必须立刻删除整个集群",
+        "C": "容器镜像一定损坏"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Readiness probe"
+    },
+    {
+      "id": "FULLSTACK-058",
+      "domain": "FULLSTACK",
+      "category": "Kubernetes",
+      "difficulty": 3,
+      "question": "Liveness Probe 主要用来判断什么？",
+      "options": {
+        "A": "数据库表是否有索引",
+        "B": "容器是否仍然存活并需要重启",
+        "C": "业务是否已准备好接流量"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Liveness probe"
+    },
+    {
+      "id": "FULLSTACK-059",
+      "domain": "FULLSTACK",
+      "category": "Kubernetes",
+      "difficulty": 3,
+      "question": "Horizontal Pod Autoscaler 常根据什么扩缩容？",
+      "options": {
+        "A": "代码行数",
+        "B": "CPU、内存或自定义指标",
+        "C": "Git commit 数量"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "HPA"
+    },
+    {
+      "id": "FULLSTACK-060",
+      "domain": "FULLSTACK",
+      "category": "Kubernetes",
+      "difficulty": 3,
+      "question": "ConfigMap 与 Secret 的主要区别是什么？",
+      "options": {
+        "A": "ConfigMap 只能存二进制",
+        "B": "Secret 用于敏感配置，ConfigMap 用于普通配置",
+        "C": "Secret 会自动对数据做强加密并无需任何安全措施"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "ConfigMap/Secret"
+    },
+    {
+      "id": "FULLSTACK-061",
+      "domain": "FULLSTACK",
+      "category": "Linux",
+      "difficulty": 2,
+      "question": "Linux 中查看端口监听情况常用什么工具？",
+      "options": {
+        "A": "chmod",
+        "B": "ss 或 netstat",
+        "C": "grep 只能看网络端口"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Linux networking"
+    },
+    {
+      "id": "FULLSTACK-062",
+      "domain": "FULLSTACK",
+      "category": "Linux",
+      "difficulty": 2,
+      "question": "`chmod` 主要用于什么？",
+      "options": {
+        "A": "修改文件权限",
+        "B": "启动 Docker 容器",
+        "C": "查看 CPU 使用率"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Linux permissions"
+    },
+    {
+      "id": "FULLSTACK-063",
+      "domain": "FULLSTACK",
+      "category": "Linux",
+      "difficulty": 3,
+      "question": "服务进程 CPU 很高时，第一步更合理的排查方式是什么？",
+      "options": {
+        "A": "直接重装操作系统",
+        "B": "先用 top/htop/ps 等确认进程和线程，再结合日志或 profiling 定位",
+        "C": "删除数据库"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Linux troubleshooting"
+    },
+    {
+      "id": "FULLSTACK-064",
+      "domain": "FULLSTACK",
+      "category": "DevOps",
+      "difficulty": 3,
+      "question": "滚动发布的主要优势是什么？",
+      "options": {
+        "A": "无法回滚",
+        "B": "逐步替换实例，降低停机和发布风险",
+        "C": "必须一次停掉所有实例"
+      },
+      "answer": "B",
+      "source_origin": "AgentGuide",
+      "source_topic": "Rolling deployment"
+    },
+    {
+      "id": "FULLSTACK-065",
+      "domain": "FULLSTACK",
+      "category": "DevOps",
+      "difficulty": 4,
+      "question": "蓝绿发布的核心思想是什么？",
+      "options": {
+        "A": "维护两套环境，通过流量切换完成上线或回滚",
+        "B": "只保留一个不可回退环境",
+        "C": "每天发布两次"
+      },
+      "answer": "A",
+      "source_origin": "AgentGuide",
+      "source_topic": "Blue-green deployment"
+    },
+    {
+      "id": "FULLSTACK-066",
+      "domain": "FULLSTACK",
+      "category": "React",
+      "difficulty": 1,
+      "question": "React 中组件 state 更新后通常会发生什么？",
+      "options": {
+        "A": "修改数据库 schema",
+        "B": "触发相关组件重新渲染",
+        "C": "自动重启后端服务"
+      },
+      "answer": "B",
+      "source_origin": "Generated from AgentGuide full-stack route",
+      "source_topic": "React state"
+    },
+    {
+      "id": "FULLSTACK-067",
+      "domain": "FULLSTACK",
+      "category": "React",
+      "difficulty": 2,
+      "question": "`useEffect` 最适合处理什么？",
+      "options": {
+        "A": "训练 Embedding",
+        "B": "定义数据库表",
+        "C": "与渲染外部系统交互的副作用，如请求、订阅、定时器"
+      },
+      "answer": "C",
+      "source_origin": "Generated from AgentGuide full-stack route",
+      "source_topic": "useEffect"
+    },
+    {
+      "id": "FULLSTACK-068",
+      "domain": "FULLSTACK",
+      "category": "React",
+      "difficulty": 2,
+      "question": "`useMemo` 的主要用途是什么？",
+      "options": {
+        "A": "在依赖未变化时复用计算结果，避免重复昂贵计算",
+        "B": "永久保存服务器数据",
+        "C": "替代所有 state"
+      },
+      "answer": "A",
+      "source_origin": "Generated from AgentGuide full-stack route",
+      "source_topic": "useMemo"
+    },
+    {
+      "id": "FULLSTACK-069",
+      "domain": "FULLSTACK",
+      "category": "React",
+      "difficulty": 2,
+      "question": "列表渲染中的 `key` 主要帮助 React 做什么？",
+      "options": {
+        "A": "自动缓存数据库",
+        "B": "提高 API 权限",
+        "C": "识别列表项在更新前后的对应关系"
+      },
+      "answer": "C",
+      "source_origin": "Generated from AgentGuide full-stack route",
+      "source_topic": "React key"
+    },
+    {
+      "id": "FULLSTACK-070",
+      "domain": "FULLSTACK",
+      "category": "React",
+      "difficulty": 2,
+      "question": "受控表单组件指什么？",
+      "options": {
+        "A": "只使用 HTML 静态值",
+        "B": "输入值主要由 React state 驱动",
+        "C": "浏览器完全不允许用户输入"
+      },
+      "answer": "B",
+      "source_origin": "Generated from AgentGuide full-stack route",
+      "source_topic": "Controlled component"
+    },
+    {
+      "id": "FULLSTACK-071",
+      "domain": "FULLSTACK",
+      "category": "React",
+      "difficulty": 3,
+      "question": "前端请求服务端数据时，TanStack Query 这类库主要解决什么？",
+      "options": {
+        "A": "请求状态、缓存、重试和失效管理",
+        "B": "管理 Kubernetes Pod",
+        "C": "编译 Python"
+      },
+      "answer": "A",
+      "source_origin": "Generated from AgentGuide full-stack route",
+      "source_topic": "Server state"
+    },
+    {
+      "id": "FULLSTACK-072",
+      "domain": "FULLSTACK",
+      "category": "Frontend",
+      "difficulty": 2,
+      "question": "浏览器 LocalStorage 不适合保存什么？",
+      "options": {
+        "A": "高敏感的长期认证密钥或明文机密",
+        "B": "非敏感展示配置",
+        "C": "普通 UI 偏好"
+      },
+      "answer": "A",
+      "source_origin": "Generated from AgentGuide full-stack route",
+      "source_topic": "Frontend security"
+    },
+    {
+      "id": "FULLSTACK-073",
+      "domain": "FULLSTACK",
+      "category": "Frontend",
+      "difficulty": 3,
+      "question": "XSS 的主要风险是什么？",
+      "options": {
+        "A": "数据库主键冲突",
+        "B": "攻击者脚本在用户浏览器上下文中执行",
+        "C": "Pod 调度失败"
+      },
+      "answer": "B",
+      "source_origin": "Generated from AgentGuide full-stack route",
+      "source_topic": "XSS"
+    },
+    {
+      "id": "FULLSTACK-074",
+      "domain": "FULLSTACK",
+      "category": "Frontend",
+      "difficulty": 3,
+      "question": "CSRF 的典型防护方法之一是什么？",
+      "options": {
+        "A": "SameSite Cookie、CSRF Token 等请求来源保护",
+        "B": "只把按钮颜色改红",
+        "C": "关闭 HTTPS"
+      },
+      "answer": "A",
+      "source_origin": "Generated from AgentGuide full-stack route",
+      "source_topic": "CSRF"
+    },
+    {
+      "id": "FULLSTACK-075",
+      "domain": "FULLSTACK",
+      "category": "Frontend",
+      "difficulty": 3,
+      "question": "大型表格渲染上万行时常用什么优化？",
+      "options": {
+        "A": "虚拟列表，只渲染可视区域附近行",
+        "B": "一次性创建更多 DOM",
+        "C": "每行嵌套多个 iframe"
+      },
+      "answer": "A",
+      "source_origin": "Generated from AgentGuide full-stack route",
+      "source_topic": "Virtual list"
+    },
+    {
+      "id": "FULLSTACK-076",
+      "domain": "FULLSTACK",
+      "category": "Architecture",
+      "difficulty": 3,
+      "question": "服务端把复杂业务逻辑全部写进路由函数的主要问题是什么？",
+      "options": {
+        "A": "职责混杂，难测试、难复用、难维护",
+        "B": "React 无法渲染",
+        "C": "会自动降低数据库索引效率"
+      },
+      "answer": "A",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Service layer"
+    },
+    {
+      "id": "FULLSTACK-077",
+      "domain": "FULLSTACK",
+      "category": "Architecture",
+      "difficulty": 3,
+      "question": "依赖倒置原则的核心思想是什么？",
+      "options": {
+        "A": "所有模块互相直接 import",
+        "B": "高层业务依赖抽象而不是具体实现细节",
+        "C": "数据库必须依赖前端"
+      },
+      "answer": "B",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Dependency inversion"
+    },
+    {
+      "id": "FULLSTACK-078",
+      "domain": "FULLSTACK",
+      "category": "Testing",
+      "difficulty": 3,
+      "question": "单元测试最适合验证什么？",
+      "options": {
+        "A": "真实用户所有行为",
+        "B": "整个生产集群的 SLA",
+        "C": "小范围函数或组件在隔离条件下的行为"
+      },
+      "answer": "C",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Unit test"
+    },
+    {
+      "id": "FULLSTACK-079",
+      "domain": "FULLSTACK",
+      "category": "Testing",
+      "difficulty": 3,
+      "question": "集成测试最适合验证什么？",
+      "options": {
+        "A": "多个真实或近真实组件协作是否正确",
+        "B": "只检查代码格式",
+        "C": "单个纯函数所有分支"
+      },
+      "answer": "A",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Integration test"
+    },
+    {
+      "id": "FULLSTACK-080",
+      "domain": "FULLSTACK",
+      "category": "Security",
+      "difficulty": 3,
+      "question": "API Key 最不应该怎么存储？",
+      "options": {
+        "A": "通过环境变量注入服务端",
+        "B": "放在服务端 Secret 管理系统",
+        "C": "明文硬编码到前端仓库"
+      },
+      "answer": "C",
+      "source_origin": "Generated from AgentGuide development topics",
+      "source_topic": "Secrets"
+    }
+  ]
+}

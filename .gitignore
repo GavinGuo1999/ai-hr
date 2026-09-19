@@ -1,0 +1,17 @@
+.venv/
+.venv312/
+.venv_uv/
+.uv-cache/
+.npm-cache/
+.tmp/
+node_modules/
+frontend/dist/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.tsbuildinfo
+*.db
+uploads/
+.env
+.env.*
+!.env.example
